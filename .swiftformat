@@ -1,0 +1,21 @@
+# DailyFlow swiftformat config
+
+--swiftversion 6.0
+--indent 4
+--maxwidth 120
+--allman false
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--commas always
+--trimwhitespace always
+--insertlines disabled
+--removelines enabled
+--semicolons never
+--ifdef no-indent
+--patternlet hoist
+--self remove
+--importgrouping testable-bottom
+
+--exclude .build,DerivedData,.swiftpm

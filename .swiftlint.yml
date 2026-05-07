@@ -1,0 +1,48 @@
+# DailyFlow swiftlint config
+
+excluded:
+  - .build
+  - DerivedData
+  - .swiftpm
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - explicit_init
+  - first_where
+  - last_where
+  - redundant_nil_coalescing
+  - sorted_imports
+  - toggle_bool
+  - unused_import
+  - convenience_type
+  - closure_spacing
+  - implicit_return
+
+disabled_rules:
+  - trailing_comma
+  - line_length
+
+identifier_name:
+  min_length:
+    warning: 2
+  excluded:
+    - id
+    - i
+    - x
+    - y
+
+type_name:
+  min_length: 3
+
+file_length:
+  warning: 200
+  error: 400
+
+function_body_length:
+  warning: 40
+  error: 80
+
+type_body_length:
+  warning: 200
+  error: 400
