@@ -10,10 +10,7 @@ struct DailyFlowApp: App {
             HabitLog.self,
             JournalEntry.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
-            groupContainer: .identifier("group.com.dmitry.dailyflow")
-        )
+        let config = ModelConfiguration(schema: schema)
         do {
             return try ModelContainer(for: schema, configurations: [config])
         } catch {
