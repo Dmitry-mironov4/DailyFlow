@@ -18,4 +18,4 @@
 --self remove
 --importgrouping testable-bottom
 
---exclude .build,DerivedData,.swiftpm
+--exclude .build,DerivedData,.swiftpm,DailyFlow.xcodeproj,DailyFlowUITests

@@ -29,8 +29,6 @@ Package.resolved
 
 # CocoaPods (не используется, но на будущее)
 Pods/
-*.xcworkspace
-!default.xcworkspace
 
 # Carthage (не используется)
 Carthage/Build/

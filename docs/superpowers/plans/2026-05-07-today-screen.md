@@ -27,24 +27,24 @@
 
 | Путь | Создать / Изменить | Ответственность |
 |---|---|---|
-| `Extensions/ColorExtensions.swift` | Создать | Цветовые токены + `Color(hex:)` |
-| `Extensions/ViewExtensions.swift` | Создать | Модификаторы `.dfTitle/.dfBody/.dfCaption/.dfCard/.dfAccentCard` |
-| `Extensions/Date+StartOfDay.swift` | Создать | `Date.startOfDay` |
-| `Extensions/Haptics.swift` | Создать | Обёртка `Haptics.tap(_:)` |
-| `Extensions/PreviewContainer.swift` | Создать | `ModelContainer.preview(_:)` для `#Preview` |
-| `Models/DailyTask.swift` | Заменить (сейчас стаб) | `@Model final class DailyTask` |
-| `Models/Habit.swift` | Заменить (сейчас стаб) | Минимальный `@Model` (для schema) |
-| `Models/HabitLog.swift` | Заменить (сейчас стаб) | Минимальный `@Model` |
-| `Models/JournalEntry.swift` | Заменить (сейчас стаб) | Минимальный `@Model` |
-| `Services/TaskService.swift` | Создать | `enum TaskService` — add/toggle/setFocus/.../rollover |
-| `App/DailyFlowApp.swift` | Заменить (сейчас стаб) | `@main`, `ModelContainer` со всеми 4 моделями |
-| `App/ContentView.swift` | Заменить (сейчас стаб) | `TabView` × 4 (Сегодня/Привычки/Дневник/Инсайты) |
-| `Views/Today/TodayView.swift` | Заменить (сейчас стаб) | Обёртка `ScenePhase` + `dateAnchor` |
-| `Views/Today/TodayContentView.swift` | Создать | Главный UI с `@Query` |
-| `Views/Today/FocusCardView.swift` | Заменить (сейчас стаб) | Карточка фокус-задачи |
-| `Views/Today/TaskRowView.swift` | Заменить (сейчас стаб) | Строка задачи |
-| `Views/Today/AddTaskBarView.swift` | Создать | Ghost → inline TextField |
-| `Views/Today/RolloverBannerView.swift` | Создать | Плашка переноса |
+| `DailyFlow/Extensions/ColorExtensions.swift` | Создать | Цветовые токены + `Color(hex:)` |
+| `DailyFlow/Extensions/ViewExtensions.swift` | Создать | Модификаторы `.dfTitle/.dfBody/.dfCaption/.dfCard/.dfAccentCard` |
+| `DailyFlow/Extensions/Date+StartOfDay.swift` | Создать | `Date.startOfDay` |
+| `DailyFlow/Extensions/Haptics.swift` | Создать | Обёртка `Haptics.tap(_:)` |
+| `DailyFlow/Extensions/PreviewContainer.swift` | Создать | `ModelContainer.preview(_:)` для `#Preview` |
+| `DailyFlow/Models/DailyTask.swift` | Заменить (сейчас стаб) | `@Model final class DailyTask` |
+| `DailyFlow/Models/Habit.swift` | Заменить (сейчас стаб) | Минимальный `@Model` (для schema) |
+| `DailyFlow/Models/HabitLog.swift` | Заменить (сейчас стаб) | Минимальный `@Model` |
+| `DailyFlow/Models/JournalEntry.swift` | Заменить (сейчас стаб) | Минимальный `@Model` |
+| `DailyFlow/Services/TaskService.swift` | Создать | `enum TaskService` — add/toggle/setFocus/.../rollover |
+| `DailyFlow/App/DailyFlowApp.swift` | Заменить (сейчас стаб) | `@main`, `ModelContainer` со всеми 4 моделями |
+| `DailyFlow/App/ContentView.swift` | Заменить (сейчас стаб) | `TabView` × 4 (Сегодня/Привычки/Дневник/Инсайты) |
+| `DailyFlow/Views/Today/TodayView.swift` | Заменить (сейчас стаб) | Обёртка `ScenePhase` + `dateAnchor` |
+| `DailyFlow/Views/Today/TodayContentView.swift` | Создать | Главный UI с `@Query` |
+| `DailyFlow/Views/Today/FocusCardView.swift` | Заменить (сейчас стаб) | Карточка фокус-задачи |
+| `DailyFlow/Views/Today/TaskRowView.swift` | Заменить (сейчас стаб) | Строка задачи |
+| `DailyFlow/Views/Today/AddTaskBarView.swift` | Создать | Ghost → inline TextField |
+| `DailyFlow/Views/Today/RolloverBannerView.swift` | Создать | Плашка переноса |
 | `DailyFlowTests/Helpers/InMemoryContainer.swift` | Создать | `TestContainer.make()` |
 | `DailyFlowTests/Models/DailyTaskTests.swift` | Создать | Тесты инициализации DailyTask |
 | `DailyFlowTests/Services/TaskServiceTests.swift` | Создать | Тесты бизнес-логики |
@@ -60,7 +60,7 @@
 ### Task 0: Создать `DailyFlow.xcodeproj` через Xcode
 
 **Files:**
-- Create: `DailyFlow.xcodeproj/` (рядом с папками `App/`, `Models/` и т.д. в корне репозитория)
+- Create: `DailyFlow.xcodeproj/` (рядом с папками `DailyFlow/App/`, `DailyFlow/Models/` и т.д. в корне репозитория)
 
 - [ ] **Step 1: File → New → Project → iOS → App → Next**
 
@@ -80,19 +80,19 @@
 
 - [ ] **Step 3: Next → выбрать папку**
 
-- Локация: **`/Users/dimamironov/DailyFlow/`** (корень репозитория, рядом с папками `App/`, `Models/` и т.д.).
+- Локация: **`/Users/dimamironov/DailyFlow/`** (корень репозитория, рядом с папками `DailyFlow/App/`, `DailyFlow/Models/` и т.д.).
 - ❌ Снять галку **"Create Git repository on my Mac"** (репозиторий уже есть).
 - Жми **Create**.
 
 После создания структура должна быть такой:
 ```
 /Users/dimamironov/DailyFlow/
-├── App/                       ← наши исходники (стабы)
-├── Models/                    ← наши исходники
-├── Views/                     ← наши исходники
-├── Services/                  ← наши исходники
-├── Extensions/                ← наши исходники
-├── Widgets/                   ← наши исходники
+├── DailyFlow/App/                       ← наши исходники (стабы)
+├── DailyFlow/Models/                    ← наши исходники
+├── DailyFlow/Views/                     ← наши исходники
+├── DailyFlow/Services/                  ← наши исходники
+├── DailyFlow/Extensions/                ← наши исходники
+├── DailyFlow/Widgets/                   ← наши исходники
 ├── DailyFlow/                 ← новая папка от Xcode (с автогенерёнными файлами)
 │   ├── DailyFlowApp.swift     ← удалить
 │   ├── ContentView.swift      ← удалить
@@ -133,7 +133,7 @@ Xcode 16+ / Xcode 26 поддерживает **synchronized file system groups*
 
 В Project Navigator папки должны отображаться **синими** (folder reference), а не **жёлтыми** (group). Если вышли жёлтые — удалить (Remove Reference, не Move to Trash) и добавить заново.
 
-Папку `Widgets/` пока **не добавлять** — для виджета нужен отдельный таргет, это вне scope текущего плана.
+Папку `DailyFlow/Widgets/` пока **не добавлять** — для виджета нужен отдельный таргет, это вне scope текущего плана.
 
 - [ ] **Step 6: Создать тестовые подпапки и подключить как folder reference**
 
@@ -190,7 +190,7 @@ xcodebuild -list -project DailyFlow.xcodeproj
 ### Task 1: ColorExtensions — палитра + `init(hex:)`
 
 **Files:**
-- Replace: `Extensions/ColorExtensions.swift`
+- Replace: `DailyFlow/Extensions/ColorExtensions.swift`
 
 - [ ] **Step 1: Заменить содержимое файла**
 
@@ -224,7 +224,7 @@ extension Color {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add Extensions/ColorExtensions.swift
+git add DailyFlow/Extensions/ColorExtensions.swift
 git commit -m "feat(design): add color tokens and hex initializer"
 ```
 
@@ -233,7 +233,7 @@ git commit -m "feat(design): add color tokens and hex initializer"
 ### Task 2: ViewExtensions — модификаторы `dfTitle/dfBody/dfCaption/dfCard/dfAccentCard`
 
 **Files:**
-- Replace: `Extensions/ViewExtensions.swift`
+- Replace: `DailyFlow/Extensions/ViewExtensions.swift`
 
 - [ ] **Step 1: Заменить содержимое файла**
 
@@ -290,7 +290,7 @@ extension View {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add Extensions/ViewExtensions.swift
+git add DailyFlow/Extensions/ViewExtensions.swift
 git commit -m "feat(design): add df* view modifiers"
 ```
 
@@ -299,7 +299,7 @@ git commit -m "feat(design): add df* view modifiers"
 ### Task 3: Date+StartOfDay
 
 **Files:**
-- Create: `Extensions/Date+StartOfDay.swift`
+- Create: `DailyFlow/Extensions/Date+StartOfDay.swift`
 
 - [ ] **Step 1: Создать файл**
 
@@ -319,7 +319,7 @@ extension Date {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add Extensions/Date+StartOfDay.swift
+git add DailyFlow/Extensions/Date+StartOfDay.swift
 git commit -m "feat(ext): add Date.startOfDay shortcut"
 ```
 
@@ -328,7 +328,7 @@ git commit -m "feat(ext): add Date.startOfDay shortcut"
 ### Task 4: Haptics
 
 **Files:**
-- Create: `Extensions/Haptics.swift`
+- Create: `DailyFlow/Extensions/Haptics.swift`
 
 - [ ] **Step 1: Создать файл**
 
@@ -348,7 +348,7 @@ enum Haptics {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add Extensions/Haptics.swift
+git add DailyFlow/Extensions/Haptics.swift
 git commit -m "feat(ext): add Haptics.tap helper"
 ```
 
@@ -359,7 +359,7 @@ git commit -m "feat(ext): add Haptics.tap helper"
 ### Task 5: DailyTask `@Model`
 
 **Files:**
-- Replace: `Models/DailyTask.swift`
+- Replace: `DailyFlow/Models/DailyTask.swift`
 - Test: `DailyFlowTests/Models/DailyTaskTests.swift`
 - Test: `DailyFlowTests/Helpers/InMemoryContainer.swift`
 
@@ -428,7 +428,7 @@ struct DailyTaskTests {
 
 - [ ] **Step 4: Реализовать `DailyTask`**
 
-Заменить `Models/DailyTask.swift`:
+Заменить `DailyFlow/Models/DailyTask.swift`:
 
 ```swift
 import Foundation
@@ -467,7 +467,7 @@ final class DailyTask {
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Models/DailyTask.swift DailyFlowTests/
+git add DailyFlow/Models/DailyTask.swift DailyFlowTests/
 git commit -m "feat(models): add DailyTask @Model + tests"
 ```
 
@@ -478,11 +478,11 @@ git commit -m "feat(models): add DailyTask @Model + tests"
 Эти модели нужны только для регистрации в `Schema` (виджет, тесты, превью). Полноценные экраны Привычек/Дневника — отдельные спеки.
 
 **Files:**
-- Replace: `Models/Habit.swift`
-- Replace: `Models/HabitLog.swift`
-- Replace: `Models/JournalEntry.swift`
+- Replace: `DailyFlow/Models/Habit.swift`
+- Replace: `DailyFlow/Models/HabitLog.swift`
+- Replace: `DailyFlow/Models/JournalEntry.swift`
 
-- [ ] **Step 1: Заменить `Models/Habit.swift`**
+- [ ] **Step 1: Заменить `DailyFlow/Models/Habit.swift`**
 
 ```swift
 import Foundation
@@ -511,7 +511,7 @@ final class Habit {
 }
 ```
 
-- [ ] **Step 2: Заменить `Models/HabitLog.swift`**
+- [ ] **Step 2: Заменить `DailyFlow/Models/HabitLog.swift`**
 
 ```swift
 import Foundation
@@ -534,7 +534,7 @@ final class HabitLog {
 }
 ```
 
-- [ ] **Step 3: Заменить `Models/JournalEntry.swift`**
+- [ ] **Step 3: Заменить `DailyFlow/Models/JournalEntry.swift`**
 
 ```swift
 import Foundation
@@ -573,7 +573,7 @@ final class JournalEntry {
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Models/Habit.swift Models/HabitLog.swift Models/JournalEntry.swift
+git add DailyFlow/Models/Habit.swift DailyFlow/Models/HabitLog.swift DailyFlow/Models/JournalEntry.swift
 git commit -m "feat(models): add minimal Habit/HabitLog/JournalEntry stubs"
 ```
 
@@ -584,7 +584,7 @@ git commit -m "feat(models): add minimal Habit/HabitLog/JournalEntry stubs"
 ### Task 7: `DailyFlowApp` с `ModelContainer`
 
 **Files:**
-- Replace: `App/DailyFlowApp.swift`
+- Replace: `DailyFlow/App/DailyFlowApp.swift`
 
 - [ ] **Step 1: Заменить файл**
 
@@ -624,7 +624,7 @@ struct DailyFlowApp: App {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add App/DailyFlowApp.swift
+git add DailyFlow/App/DailyFlowApp.swift
 git commit -m "feat(app): bootstrap ModelContainer with all four models"
 ```
 
@@ -633,7 +633,7 @@ git commit -m "feat(app): bootstrap ModelContainer with all four models"
 ### Task 8: `ContentView` — `TabView` (заглушка для трёх вкладок)
 
 **Files:**
-- Replace: `App/ContentView.swift`
+- Replace: `DailyFlow/App/ContentView.swift`
 
 - [ ] **Step 1: Заменить файл**
 
@@ -684,7 +684,7 @@ private struct ComingSoonView: View {
 
 Ожидаемо: `❌` — `TodayView` ещё стаб (`// TODO: implement`). Если ошибка ровно про `TodayView` — это норма, продолжаем. Если другая — починить и зафиксировать.
 
-- [ ] **Step 3: Временно заменить `Views/Today/TodayView.swift` плейсхолдером, чтобы Phase 2/3 закоммитились зелёными**
+- [ ] **Step 3: Временно заменить `DailyFlow/Views/Today/TodayView.swift` плейсхолдером, чтобы Phase 2/3 закоммитились зелёными**
 
 ```swift
 import SwiftUI
@@ -710,7 +710,7 @@ struct TodayView: View {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add App/ContentView.swift Views/Today/TodayView.swift
+git add DailyFlow/App/ContentView.swift DailyFlow/Views/Today/TodayView.swift
 git commit -m "feat(app): scaffold TabView with placeholder TodayView"
 ```
 
@@ -721,7 +721,7 @@ git commit -m "feat(app): scaffold TabView with placeholder TodayView"
 ### Task 9: `TaskService` namespace + первый тест `add` (TDD)
 
 **Files:**
-- Create: `Services/TaskService.swift`
+- Create: `DailyFlow/Services/TaskService.swift`
 - Test: `DailyFlowTests/Services/TaskServiceTests.swift`
 
 - [ ] **Step 1: Написать первые два падающих теста для `add`**
@@ -766,7 +766,7 @@ struct TaskServiceTests {
 
 - [ ] **Step 2: Запустить тесты — должны не собраться (нет `TaskService`)**
 
-- [ ] **Step 3: Создать `Services/TaskService.swift` с `add`**
+- [ ] **Step 3: Создать `DailyFlow/Services/TaskService.swift` с `add`**
 
 ```swift
 import Foundation
@@ -799,7 +799,7 @@ enum TaskService {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
+git add DailyFlow/Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
 git commit -m "feat(service): TaskService.add with trim + tests"
 ```
 
@@ -808,7 +808,7 @@ git commit -m "feat(service): TaskService.add with trim + tests"
 ### Task 10: `toggleCompletion` (TDD)
 
 **Files:**
-- Modify: `Services/TaskService.swift`
+- Modify: `DailyFlow/Services/TaskService.swift`
 - Modify: `DailyFlowTests/Services/TaskServiceTests.swift`
 
 - [ ] **Step 1: Добавить два падающих теста**
@@ -862,7 +862,7 @@ static func toggleCompletion(_ task: DailyTask, in ctx: ModelContext) {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
+git add DailyFlow/Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
 git commit -m "feat(service): toggleCompletion + tests"
 ```
 
@@ -871,7 +871,7 @@ git commit -m "feat(service): toggleCompletion + tests"
 ### Task 11: `setFocus` / `clearFocus` (TDD)
 
 **Files:**
-- Modify: `Services/TaskService.swift`
+- Modify: `DailyFlow/Services/TaskService.swift`
 - Modify: `DailyFlowTests/Services/TaskServiceTests.swift`
 
 - [ ] **Step 1: Добавить три падающих теста**
@@ -962,7 +962,7 @@ static func clearFocus(on date: Date, in ctx: ModelContext) throws {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
+git add DailyFlow/Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
 git commit -m "feat(service): setFocus / clearFocus + tests"
 ```
 
@@ -971,7 +971,7 @@ git commit -m "feat(service): setFocus / clearFocus + tests"
 ### Task 12: `updateTitle` + `delete` (TDD)
 
 **Files:**
-- Modify: `Services/TaskService.swift`
+- Modify: `DailyFlow/Services/TaskService.swift`
 - Modify: `DailyFlowTests/Services/TaskServiceTests.swift`
 
 - [ ] **Step 1: Добавить тесты**
@@ -1035,7 +1035,7 @@ static func delete(_ task: DailyTask, in ctx: ModelContext) {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
+git add DailyFlow/Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
 git commit -m "feat(service): updateTitle + delete + tests"
 ```
 
@@ -1044,7 +1044,7 @@ git commit -m "feat(service): updateTitle + delete + tests"
 ### Task 13: `rolloverPending` (TDD)
 
 **Files:**
-- Modify: `Services/TaskService.swift`
+- Modify: `DailyFlow/Services/TaskService.swift`
 - Modify: `DailyFlowTests/Services/TaskServiceTests.swift`
 
 - [ ] **Step 1: Добавить тесты**
@@ -1129,7 +1129,7 @@ static func rolloverPending(into target: Date, in ctx: ModelContext) throws -> I
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
+git add DailyFlow/Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
 git commit -m "feat(service): rolloverPending + tests"
 ```
 
@@ -1138,7 +1138,7 @@ git commit -m "feat(service): rolloverPending + tests"
 ### Task 14: `discardPending` (TDD)
 
 **Files:**
-- Modify: `Services/TaskService.swift`
+- Modify: `DailyFlow/Services/TaskService.swift`
 - Modify: `DailyFlowTests/Services/TaskServiceTests.swift`
 
 - [ ] **Step 1: Добавить тест**
@@ -1192,7 +1192,7 @@ static func discardPending(before date: Date, in ctx: ModelContext) throws -> In
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
+git add DailyFlow/Services/TaskService.swift DailyFlowTests/Services/TaskServiceTests.swift
 git commit -m "feat(service): discardPending + tests"
 ```
 
@@ -1203,7 +1203,7 @@ git commit -m "feat(service): discardPending + tests"
 ### Task 15: `ModelContainer.preview(_:)` фабрика для `#Preview`
 
 **Files:**
-- Create: `Extensions/PreviewContainer.swift`
+- Create: `DailyFlow/Extensions/PreviewContainer.swift`
 
 - [ ] **Step 1: Создать файл**
 
@@ -1275,7 +1275,7 @@ extension ModelContainer {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add Extensions/PreviewContainer.swift
+git add DailyFlow/Extensions/PreviewContainer.swift
 git commit -m "feat(preview): add ModelContainer.preview(_:) factory"
 ```
 
@@ -1286,7 +1286,7 @@ git commit -m "feat(preview): add ModelContainer.preview(_:) factory"
 ### Task 16: `AddTaskBarView`
 
 **Files:**
-- Create: `Views/Today/AddTaskBarView.swift`
+- Create: `DailyFlow/Views/Today/AddTaskBarView.swift`
 
 - [ ] **Step 1: Создать файл**
 
@@ -1364,7 +1364,7 @@ private struct StatefulPreview: View {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add Views/Today/AddTaskBarView.swift
+git add DailyFlow/Views/Today/AddTaskBarView.swift
 git commit -m "feat(today): AddTaskBarView (ghost → inline TextField)"
 ```
 
@@ -1373,7 +1373,7 @@ git commit -m "feat(today): AddTaskBarView (ghost → inline TextField)"
 ### Task 17: `TaskRowView`
 
 **Files:**
-- Replace: `Views/Today/TaskRowView.swift`
+- Replace: `DailyFlow/Views/Today/TaskRowView.swift`
 
 - [ ] **Step 1: Заменить файл**
 
@@ -1508,7 +1508,7 @@ struct TaskRowView: View {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add Views/Today/TaskRowView.swift
+git add DailyFlow/Views/Today/TaskRowView.swift
 git commit -m "feat(today): TaskRowView with checkbox/edit/swipe/contextMenu"
 ```
 
@@ -1517,7 +1517,7 @@ git commit -m "feat(today): TaskRowView with checkbox/edit/swipe/contextMenu"
 ### Task 18: `FocusCardView`
 
 **Files:**
-- Replace: `Views/Today/FocusCardView.swift`
+- Replace: `DailyFlow/Views/Today/FocusCardView.swift`
 
 - [ ] **Step 1: Заменить файл**
 
@@ -1646,7 +1646,7 @@ struct FocusCardView: View {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add Views/Today/FocusCardView.swift
+git add DailyFlow/Views/Today/FocusCardView.swift
 git commit -m "feat(today): FocusCardView (accent card + edit + contextMenu)"
 ```
 
@@ -1655,7 +1655,7 @@ git commit -m "feat(today): FocusCardView (accent card + edit + contextMenu)"
 ### Task 19: `RolloverBannerView`
 
 **Files:**
-- Create: `Views/Today/RolloverBannerView.swift`
+- Create: `DailyFlow/Views/Today/RolloverBannerView.swift`
 
 - [ ] **Step 1: Создать файл**
 
@@ -1715,7 +1715,7 @@ struct RolloverBannerView: View {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add Views/Today/RolloverBannerView.swift
+git add DailyFlow/Views/Today/RolloverBannerView.swift
 git commit -m "feat(today): RolloverBannerView (move/discard)"
 ```
 
@@ -1724,7 +1724,7 @@ git commit -m "feat(today): RolloverBannerView (move/discard)"
 ### Task 20: `TodayContentView` — главный экран
 
 **Files:**
-- Create: `Views/Today/TodayContentView.swift`
+- Create: `DailyFlow/Views/Today/TodayContentView.swift`
 
 - [ ] **Step 1: Создать файл**
 
@@ -1905,7 +1905,7 @@ struct TodayContentView: View {
 - [ ] **Step 2: Проверить лимит строк**
 
 ```bash
-wc -l Views/Today/TodayContentView.swift
+wc -l DailyFlow/Views/Today/TodayContentView.swift
 ```
 
 Ожидаемо: ≤ 200 (лимит swiftlint warning). Спек ставит мягкий лимит ≤ 130 — если превышено, выдели header в отдельный private view внутри файла, но не в новый файл.
@@ -1923,7 +1923,7 @@ wc -l Views/Today/TodayContentView.swift
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Views/Today/TodayContentView.swift
+git add DailyFlow/Views/Today/TodayContentView.swift
 git commit -m "feat(today): TodayContentView with @Query, focus, rollover, add"
 ```
 
@@ -1932,7 +1932,7 @@ git commit -m "feat(today): TodayContentView with @Query, focus, rollover, add"
 ### Task 21: `TodayView` — обёртка с `dateAnchor`
 
 **Files:**
-- Replace: `Views/Today/TodayView.swift`
+- Replace: `DailyFlow/Views/Today/TodayView.swift`
 
 - [ ] **Step 1: Заменить файл (вместо плейсхолдера из Task 8)**
 
@@ -1981,7 +1981,7 @@ Sanity check (быстрый smoke-тест):
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Views/Today/TodayView.swift
+git add DailyFlow/Views/Today/TodayView.swift
 git commit -m "feat(today): TodayView wrapper with scenePhase-based dateAnchor"
 ```
 
@@ -2057,20 +2057,20 @@ git commit -m "chore: apply swiftformat across codebase" --allow-empty
 В блоке файлового дерева убедиться, что присутствуют:
 ```
 DailyFlow/
-  Views/Today/
+  DailyFlow/Views/Today/
     TodayContentView.swift
     AddTaskBarView.swift
     RolloverBannerView.swift
-  Services/
+  DailyFlow/Services/
     TaskService.swift
-  Extensions/
+  DailyFlow/Extensions/
     Haptics.swift
     Date+StartOfDay.swift
     PreviewContainer.swift
   DailyFlowTests/
     Helpers/InMemoryContainer.swift
-    Models/DailyTaskTests.swift
-    Services/TaskServiceTests.swift
+    DailyFlow/Models/DailyTaskTests.swift
+    DailyFlow/Services/TaskServiceTests.swift
 ```
 
 (Они уже задекларированы в текущем `CLAUDE.md` — просто проверить, что описание соответствует реальности.)

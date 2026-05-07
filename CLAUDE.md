@@ -11,77 +11,77 @@
 - **Платформа:** iOS 26+, только iPhone (без iPad/Mac Catalyst)
 - **Язык:** Swift 6, SwiftUI + SwiftData
 - **Архитектура:** MVVM (ViewModels добавляются только там, где состояние/логика выходит за рамки одной View)
-- **Бандл ID:** `com.dmitry.dailyflow` (предполагаемый)
+- **Бандл ID:** `com.dmitry.DailyFlow`
 - **App Group:** `group.com.dmitry.dailyflow`
-- **Локализация:** только русский (ru)
-- **Тема:** только тёмная, без auto/light
-- **Статус:** 🟡 Скаффолдинг завершён, дизайн-токены и кастомный `.claude/` плагин настроены. Спек экрана «Сегодня» утверждён ([`docs/superpowers/specs/2026-05-07-today-screen-design.md`](./docs/superpowers/specs/2026-05-07-today-screen-design.md)). Следующий шаг — `superpowers:writing-plans` в новой сессии.
+- **Локализация:** только русский (ru, development region)
+- **Тема:** только тёмная (`UIUserInterfaceStyle = Dark` в pbxproj)
+- **Xcode-проект:** `DailyFlow.xcodeproj` (Xcode 26, objectVersion 77, synchronized folder references). Деплоймент-таргет iOS 26.4, `SWIFT_VERSION = 6.0`, `TARGETED_DEVICE_FAMILY = "1"` (iPhone only), портретная ориентация.
+- **Статус:** 🟢 Phase 0 завершена. Xcode-проект создан, таргеты сконфигурированы, скаффолд скомпилируется (linker ругается только на отсутствие `@main` — это норма до Phase 3). План реализации экрана «Сегодня»: [`docs/superpowers/plans/2026-05-07-today-screen.md`](./docs/superpowers/plans/2026-05-07-today-screen.md). Следующий шаг — Phase 1 через subagent-driven execution.
 
 ---
 
 ## Структура файлов
 
 ```
-DailyFlow/
+DailyFlow/                              # репозиторий
   CLAUDE.md
-  .claude/                      # кастомный плагин: команды /build /lint /format /sim
+  .claude/                              # кастомный плагин: команды /build /lint /format /sim
     settings.json
     commands/
     skills/dailyflow-context/
-  .swiftformat                  # форматирование (Swift 6, indent 4, maxwidth 120)
-  .swiftlint.yml                # линтинг
+  .swiftformat                          # форматирование (Swift 6, indent 4, maxwidth 120)
+  .swiftlint.yml                        # линтинг
   docs/
-    PROMPTS.md                  # шаблоны промтов для отдельных сессий
+    PROMPTS.md
     superpowers/
-      specs/
-        2026-05-07-today-screen-design.md
-  App/
-    DailyFlowApp.swift          # @main, точка входа, SwiftData container
-    ContentView.swift           # TabView с 4 вкладками
-  Models/
-    DailyTask.swift             # @Model — задача дня (включая фокус)
-    Habit.swift                 # @Model — привычка
-    HabitLog.swift              # @Model — отметка о выполнении привычки
-    JournalEntry.swift          # @Model — запись настроения + текст
-  Views/
-    Today/
-      TodayView.swift           # обёртка: ScenePhase + dateAnchor
-      TodayContentView.swift    # реальный UI с @Query (см. spec)
-      FocusCardView.swift       # карточка фокус-задачи
-      TaskRowView.swift         # строка задачи в списке
-      AddTaskBarView.swift      # ghost → inline TextField
-      RolloverBannerView.swift  # плашка переноса вчерашних задач
-    Habits/
-      HabitsView.swift          # экран «Привычки»
-      HabitCardView.swift       # карточка одной привычки
-      PixelGridView.swift       # 7-дневная сетка пикселей
-    Journal/
-      JournalView.swift         # экран «Дневник»
-      MoodPickerView.swift      # выбор настроения 1–5
-    Insights/
-      InsightsView.swift        # экран «Инсайты»
-      WeekStatView.swift        # карточка недельной статистики
-  Services/
-    TaskService.swift           # бизнес-логика задач: add/toggle/setFocus/rollover
-    ObsidianService.swift       # экспорт .md через UIDocumentPickerViewController
-    SettingsManager.swift       # пользовательские настройки (UserDefaults в App Group)
-  Widgets/
-    DailyFlowWidgets.swift      # WidgetKit: фокус-задача + pixel grid
-  Extensions/
-    ColorExtensions.swift       # токены палитры (.bgPrimary, .accentTeal, …)
-    ViewExtensions.swift        # модификаторы (.dfTitle, .dfCard, .dfAccentCard)
-    Haptics.swift               # обёртка над UIImpactFeedbackGenerator
-    Date+StartOfDay.swift       # var startOfDay: Date
-    PreviewContainer.swift      # in-memory ModelContainer для #Preview-сценариев
+      specs/2026-05-07-today-screen-design.md
+      plans/2026-05-07-today-screen.md
 
-DailyFlowTests/                 # таргет тестов (Swift Testing, не XCTest)
-  Helpers/
-    InMemoryContainer.swift
-  Services/
-    TaskServiceTests.swift
-  Models/
-    DailyTaskTests.swift
+  DailyFlow.xcodeproj/                  # Xcode 26, objectVersion 77, synchronized folders
+
+  DailyFlow/                            # source folder таргета DailyFlow (auto-discovered)
+    Assets.xcassets/                    # AppIcon, AccentColor (Xcode-managed)
+    App/
+      DailyFlowApp.swift                # @main, точка входа, ModelContainer
+      ContentView.swift                 # TabView × 4 вкладки
+    Models/
+      DailyTask.swift                   # @Model — задача дня (включая фокус)
+      Habit.swift                       # @Model — привычка
+      HabitLog.swift                    # @Model — отметка о выполнении привычки
+      JournalEntry.swift                # @Model — запись настроения + текст
+    Views/
+      Today/
+        TodayView.swift                 # обёртка: ScenePhase + dateAnchor
+        TodayContentView.swift          # реальный UI с @Query
+        FocusCardView.swift             # карточка фокус-задачи
+        TaskRowView.swift               # строка задачи в списке
+        AddTaskBarView.swift            # ghost → inline TextField
+        RolloverBannerView.swift        # плашка переноса вчерашних задач
+      Habits/                           # экран «Привычки» (отдельный спек)
+      Journal/                          # экран «Дневник» (отдельный спек)
+      Insights/                         # экран «Инсайты» (отдельный спек)
+    Services/
+      TaskService.swift                 # бизнес-логика задач
+      ObsidianService.swift             # экспорт .md через UIDocumentPickerViewController
+      SettingsManager.swift             # UserDefaults в App Group
+    Extensions/
+      ColorExtensions.swift             # токены палитры (.bgPrimary, .accentTeal, …)
+      ViewExtensions.swift              # модификаторы (.dfTitle, .dfCard, .dfAccentCard)
+      Haptics.swift                     # обёртка над UIImpactFeedbackGenerator
+      Date+StartOfDay.swift             # var startOfDay: Date
+      PreviewContainer.swift            # in-memory ModelContainer для #Preview-сценариев
+    Widgets/                            # отдельный таргет, добавляется позже
+      DailyFlowWidgets.swift
+
+  DailyFlowTests/                       # source folder таргета DailyFlowTests (Swift Testing)
+    Helpers/InMemoryContainer.swift
+    Models/DailyTaskTests.swift
+    Services/TaskServiceTests.swift
+
+  DailyFlowUITests/                     # пустой UI-тест таргет, не используется
 ```
+
+**Synchronized folder references:** Xcode 26 (`PBXFileSystemSynchronizedRootGroup`) автоматически подхватывает любой новый `.swift` файл в `DailyFlow/`, `DailyFlowTests/`, `DailyFlowUITests/`. Создавай файлы через Bash/Write — Xcode сам добавит их в нужный таргет.
 
 **Правило:** каждый View-файл ≤ 150 строк. Если становится длиннее — выноси компоненты.
 

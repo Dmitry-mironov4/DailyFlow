@@ -4,6 +4,8 @@ excluded:
   - .build
   - DerivedData
   - .swiftpm
+  - DailyFlow.xcodeproj
+  - DailyFlowUITests
 
 opt_in_rules:
   - empty_count
