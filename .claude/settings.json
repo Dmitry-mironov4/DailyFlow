@@ -12,7 +12,10 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
       "Bash(git restore:*)",
+      "Bash(gh:*)",
       "Bash(find:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
@@ -23,7 +26,6 @@
     ],
     "deny": [
       "Bash(rm -rf:*)",
-      "Bash(git push:*)",
       "Bash(git reset --hard:*)"
     ]
   }
