@@ -4,6 +4,8 @@ excluded:
   - .build
   - DerivedData
   - .swiftpm
+  - DailyFlow.xcodeproj
+  - DailyFlowUITests
 
 opt_in_rules:
   - empty_count
@@ -22,6 +24,7 @@ opt_in_rules:
 disabled_rules:
   - trailing_comma
   - line_length
+  - sorted_imports
 
 identifier_name:
   min_length:
@@ -46,3 +49,4 @@ function_body_length:
 type_body_length:
   warning: 200
   error: 400
+
