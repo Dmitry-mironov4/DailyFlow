@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct HabitsView: View {
     @Environment(\.modelContext) private var ctx
@@ -15,7 +15,7 @@ struct HabitsView: View {
                 HabitCardView(
                     habit: habit,
                     onToggle: { HabitService.toggleToday(habit, in: ctx) },
-                    onEdit:   { editingHabit = habit },
+                    onEdit: { editingHabit = habit },
                     onDelete: { HabitService.delete(habit, in: ctx) }
                 )
                 .listRowBackground(Color.bgPrimary)

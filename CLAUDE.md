@@ -16,7 +16,7 @@
 - **Локализация:** только русский (ru, development region)
 - **Тема:** только тёмная (`UIUserInterfaceStyle = Dark` в pbxproj)
 - **Xcode-проект:** `DailyFlow.xcodeproj` (Xcode 26, objectVersion 77, synchronized folder references). Деплоймент-таргет iOS 26.4, `SWIFT_VERSION = 6.0`, `TARGETED_DEVICE_FAMILY = "1"` (iPhone only), портретная ориентация.
-- **Статус:** 🟢 Phase 1 завершена. Phase 2 завершена. Экраны «Сегодня» и «Привычки» полностью реализованы: все View, сервисы, модели, расширения, тесты. Build succeeded 0 warnings. Следующий шаг — экраны «Дневник», «Инсайты» (нужны спеки).
+- **Статус:** 🟢 Phase 1 завершена. Phase 2 завершена. Экраны «Сегодня», «Привычки» и «Дневник» полностью реализованы: все View, сервисы, модели, расширения, тесты. Build succeeded 0 warnings. Следующий шаг — экспорт в Obsidian (нужен спек) и экран «Инсайты» (нужен спек).
 
 ---
 
@@ -62,11 +62,15 @@ DailyFlow/                              # репозиторий
         HabitCardView.swift        # карточка: toggle, streak, PixelGrid, contextMenu
         PixelGridView.swift        # 7 квадратов 28×28, последние 7 дней
         AddHabitSheet.swift        # sheet создания/редактирования привычки
-      Journal/                          # экран «Дневник» (отдельный спек)
+      Journal/
+        JournalView.swift               # обёртка: хедер + MoodPicker + Editor
+        MoodPickerView.swift            # 5 цифровых тайлов 1–5
+        JournalEditorView.swift         # TextEditor с debounce-autosave
       Insights/                         # экран «Инсайты» (отдельный спек)
     Services/
       TaskService.swift                 # бизнес-логика задач (enum-namespace, stateless)
       HabitService.swift                # бизнес-логика привычек (enum-namespace, stateless)
+      JournalService.swift              # бизнес-логика дневника (enum-namespace, stateless)
       ObsidianService.swift             # экспорт .md через UIDocumentPickerViewController
       SettingsManager.swift             # UserDefaults в App Group
     Extensions/
@@ -188,7 +192,7 @@ JournalEntry                     # детали уточняются в спек
 - [x] Экран «Сегодня» — полностью реализован, build ok, lint clean, 13 тестов (12 по спеку + 1 доп.)
 - [x] Дизайн-токены и каркас: ContentView (иконки, таб-бар UITabBarAppearance), ViewExtensions (.dfLabel), верифицированы в симуляторе
 - [x] Экран «Привычки» — полностью реализован, build ok, lint clean, 15 тестов HabitService
-- [ ] Экран «Дневник» (нужен спек)
+- [x] Экран «Дневник» — полностью реализован, build ok, lint clean, 15 тестов JournalService
 - [ ] Экран «Инсайты» (нужен спек)
 - [ ] Экспорт в Obsidian (нужен спек)
 - [ ] Виджеты (нужен спек)
