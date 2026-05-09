@@ -73,5 +73,77 @@ struct InsightsServiceTests {
         try ctx.save()
         #expect(InsightsService.tasksRate(today: Self.today, in: ctx) == nil)
     }
+
+    // MARK: — habitsRate
+
+    @Test func habitsRate_returnsNil_whenNoHabits() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        #expect(InsightsService.habitsRate(today: Self.today, in: ctx) == nil)
+    }
+
+    @Test func habitsRate_returnsNil_whenAllHabitsCreatedAfterToday() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let h = Habit(name: "Future", colorHex: "2DD4A0", sortOrder: 0)
+        // createdAt вручную в будущее (тестовый трюк).
+        h.createdAt = Self.day(1)
+        ctx.insert(h)
+        try ctx.save()
+        #expect(InsightsService.habitsRate(today: Self.today, in: ctx) == nil)
+    }
+
+    @Test func habitsRate_returnsOne_whenAllHabitsDoneEveryDay() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let h1 = Habit(name: "H1", colorHex: "2DD4A0", sortOrder: 0)
+        let h2 = Habit(name: "H2", colorHex: "F0A23B", sortOrder: 1)
+        h1.createdAt = Self.day(-30)
+        h2.createdAt = Self.day(-30)
+        ctx.insert(h1); ctx.insert(h2)
+        for offset in -6...0 {
+            ctx.insert(HabitLog(date: Self.day(offset), habit: h1))
+            ctx.insert(HabitLog(date: Self.day(offset), habit: h2))
+        }
+        try ctx.save()
+        let rate = InsightsService.habitsRate(today: Self.today, in: ctx)
+        #expect(abs((rate ?? -1) - 1.0) < 0.0001)
+    }
+
+    @Test func habitsRate_perDayAveraging() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let h1 = Habit(name: "H1", colorHex: "2DD4A0", sortOrder: 0)
+        let h2 = Habit(name: "H2", colorHex: "F0A23B", sortOrder: 1)
+        h1.createdAt = Self.day(-30)
+        h2.createdAt = Self.day(-30)
+        ctx.insert(h1); ctx.insert(h2)
+        // День -6: оба сделаны → 2/2 = 1.0
+        ctx.insert(HabitLog(date: Self.day(-6), habit: h1))
+        ctx.insert(HabitLog(date: Self.day(-6), habit: h2))
+        // День -5: только h1 → 1/2 = 0.5
+        ctx.insert(HabitLog(date: Self.day(-5), habit: h1))
+        // Дни -4 ... 0: оба не сделаны → 0/2 = 0.0
+        try ctx.save()
+        // Среднее: (1.0 + 0.5 + 0 + 0 + 0 + 0 + 0) / 7 = 1.5 / 7 ≈ 0.2143
+        let rate = InsightsService.habitsRate(today: Self.today, in: ctx)
+        #expect(abs((rate ?? -1) - (1.5 / 7.0)) < 0.0001)
+    }
+
+    @Test func habitsRate_excludesDaysBeforeFirstHabit() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        // Привычка создана 2 дня назад. Дни -6...-3 не имеют активных привычек → skip.
+        let h = Habit(name: "Newcomer", colorHex: "2DD4A0", sortOrder: 0)
+        h.createdAt = Self.day(-2)
+        ctx.insert(h)
+        ctx.insert(HabitLog(date: Self.day(-2), habit: h))
+        ctx.insert(HabitLog(date: Self.day(-1), habit: h))
+        ctx.insert(HabitLog(date: Self.day(0), habit: h))
+        try ctx.save()
+        // Активны 3 дня (-2, -1, 0), все сделаны → среднее [1.0, 1.0, 1.0] = 1.0.
+        let rate = InsightsService.habitsRate(today: Self.today, in: ctx)
+        #expect(abs((rate ?? -1) - 1.0) < 0.0001)
+    }
 }
 }
