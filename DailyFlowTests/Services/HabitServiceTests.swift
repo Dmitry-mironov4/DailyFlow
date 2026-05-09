@@ -66,6 +66,15 @@ struct HabitServiceTests {
         #expect(!HabitService.isDone(habit, on: .now))
     }
 
+    @Test func isDone_returnsTrueWhenLogExists() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let habit = Habit(name: "Test", colorHex: "2DD4A0", sortOrder: 0)
+        ctx.insert(habit)
+        HabitService.toggleToday(habit, in: ctx)
+        #expect(HabitService.isDone(habit, on: .now))
+    }
+
     // MARK: — streak
 
     @Test func streak_returnsZeroAndInactiveWhenNeverDone() throws {
