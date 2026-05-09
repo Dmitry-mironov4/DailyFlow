@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct PixelGridView: View {
     let habit: Habit
@@ -21,7 +21,7 @@ struct PixelGridView: View {
 
     private var lastSevenDays: [Date] {
         let today = Calendar.current.startOfDay(for: .now)
-        return (0..<7).reversed().map {
+        return (0 ..< 7).reversed().map {
             Calendar.current.date(byAdding: .day, value: -$0, to: today)!
         }
     }
@@ -40,7 +40,7 @@ struct PixelGridView: View {
     let habit = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 0)
     container.mainContext.insert(habit)
     let today = Calendar.current.startOfDay(for: .now)
-    for i in 0..<5 {
+    for i in 0 ..< 5 {
         let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
         container.mainContext.insert(HabitLog(date: date, habit: habit))
     }

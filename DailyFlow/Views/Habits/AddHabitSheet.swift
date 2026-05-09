@@ -88,5 +88,5 @@ struct AddHabitSheet: View {
     AddHabitSheet(
         habit: Habit(name: "Медитация", colorHex: "F0A23B", sortOrder: 0)
     ) { _, _ in }
-    .preferredColorScheme(.dark)
+        .preferredColorScheme(.dark)
 }

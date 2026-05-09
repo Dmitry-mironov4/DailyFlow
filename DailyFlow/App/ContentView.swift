@@ -7,7 +7,7 @@ struct ContentView: View {
                 .tabItem { Label("Сегодня", systemImage: "calendar") }
             HabitsView()
                 .tabItem { Label("Привычки", systemImage: "square.grid.2x2") }
-            placeholder
+            JournalView()
                 .tabItem { Label("Дневник", systemImage: "note.text") }
             placeholder
                 .tabItem { Label("Инсайты", systemImage: "chart.bar") }
