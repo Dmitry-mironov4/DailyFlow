@@ -40,4 +40,8 @@ extension View {
                     .padding(.vertical, 4)
             }
     }
+
+    func dfStat() -> some View {
+        font(.system(size: 28, weight: .semibold))
+    }
 }
