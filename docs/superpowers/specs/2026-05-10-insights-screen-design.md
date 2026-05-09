@@ -26,8 +26,8 @@
 |---|---|---|
 | Q1 | Период метрик | Скользящие 7 дней `[today−6 … today]` (rolling) |
 | Q2 | Расчёт «% задач» | `closed / total` среди задач с `date ∈ window`. nil, если задач 0. |
-| Q3 | Расчёт «% привычек» | `Σ logs / Σ min(7, daysSinceCreated+1)` — знаменатель учитывает `Habit.createdAt` |
-| Q4 | Расчёт «среднее настроение» | Простое среднее `moodScore`. Формат «`4.2 / 5`». Прочерк при отсутствии записей |
+| Q3 | Расчёт «% привычек» | Среднее «дневной доли»: для каждого дня окна, в котором были активные привычки, считаем `выполненных / активных`, потом среднее. Активная привычка = `createdAt.startOfDay <= day`. nil, если ни одного активного дня. |
+| Q4 | Расчёт «настроение %» | Среднее `moodScore`, нормированное в долю: `(avg − 1) / 4`. Формат `84%`. Прочерк при отсутствии записей. Унифицирует все 3 метрики в один формат. |
 | Q5 | «Лучшие стрики» | Топ-3 текущих стриков (`HabitService.streak`), `value > 0`. Секция скрывается, если пусто |
 | Q6 | Гистограмма настроения | Swift Charts `BarMark`, домен Y `0...5`, цвет `accentPurple`, подпись X — числа дней. Дни без записи — пустой слот |
 | Q7 | Empty state | Порог < 3 уникальных дней с данными в окне. Текст по центру, без иллюстраций |
@@ -73,16 +73,20 @@ let start = Calendar.current.date(byAdding: .day, value: -6, to: end)!
 enum InsightsService {
 
     /// Доля выполненных задач за окно. nil, если в окне нет задач.
+    /// Возвращает значение в [0.0 ... 1.0].
     static func tasksRate(today: Date, in ctx: ModelContext) -> Double?
 
-    /// Доля выполненных привычек.
-    /// Знаменатель = Σ по привычкам min(7, daysSinceCreated+1).
-    /// Числитель = количество HabitLog в окне (с date >= habit.createdAt.startOfDay).
-    /// nil если знаменатель == 0 (нет привычек или все созданы после today).
+    /// Среднее «дневной доли выполненных привычек» по окну.
+    /// Для каждого дня окна, в котором есть хотя бы одна активная привычка
+    /// (createdAt.startOfDay <= day), считаем activeLogs / activeHabits.
+    /// Возвращает среднее этих значений в [0.0 ... 1.0]. nil, если ни одного активного дня.
     static func habitsRate(today: Date, in ctx: ModelContext) -> Double?
 
-    /// Простое среднее JournalEntry.moodScore за окно. nil, если 0 записей.
-    static func averageMood(today: Date, in ctx: ModelContext) -> Double?
+    /// Среднее настроение, нормированное в долю.
+    /// avg = mean(JournalEntry.moodScore) для записей в окне.
+    /// rate = (avg − 1) / 4 → ∈ [0.0 ... 1.0].
+    /// nil, если 0 записей.
+    static func moodRate(today: Date, in ctx: ModelContext) -> Double?
 
     /// Топ-N привычек по value текущего стрика.
     /// Использует HabitService.streak(for:relativeTo:).
@@ -109,8 +113,9 @@ enum InsightsService {
 4. Все методы выполняются на main actor (`ModelContext` main-bound).
 5. `topStreaks` исключает `value == 0` — нулевой стрик не показывается; во View секция при пустом результате скрывается.
 6. `moodSeries` возвращает ровно 7 элементов, отсортированных по дате возрастающе.
-7. `habitsRate` исключает «ретроактивные» `HabitLog` с `log.date < habit.createdAt.startOfDay` — из числителя и знаменателя.
+7. `habitsRate` исключает «ретроактивные» `HabitLog` с `log.date < habit.createdAt.startOfDay` — такой лог не попадёт в `activeLogs` ни в один день, потому что в этот день привычка ещё не активна.
 8. Будущие задачи (`date > today`) не учитываются (окно `[today−6 … today]`).
+9. Все три метрики (`tasksRate`, `habitsRate`, `moodRate`) возвращают `Double?` ∈ `[0.0 ... 1.0]` — единый формат.
 
 ### 4.4. Псевдокод ключевых формул
 
@@ -121,28 +126,34 @@ if tasks.isEmpty { return nil }
 return Double(tasks.count where isCompleted) / Double(tasks.count)
 ```
 
-**`habitsRate`:**
+**`habitsRate`** — среднее «дневной доли» по дням, в которых были активные привычки:
 ```
 habits = fetch Habit
-denom = 0
-for h in habits:
-    createdDay = h.createdAt.startOfDay
-    if createdDay > end: continue                       // создана после окна
-    daysCovered = days_between(max(createdDay, start), end) + 1
-    denom += min(7, daysCovered)
-if denom == 0: return nil
-
-numer = count of HabitLog where:
-    log.date in [start...end]
-    AND log.date >= log.habit.createdAt.startOfDay
-return Double(numer) / Double(denom)
+dailyRates: [Double] = []
+for day in [start...end]:                                // 7 дней
+    activeHabits = habits.filter { $0.createdAt.startOfDay <= day }
+    if activeHabits.isEmpty: continue                    // день до появления первой привычки
+    activeLogs = count of HabitLog where:
+        log.date == day
+        AND log.habit ∈ activeHabits
+    dailyRate = Double(activeLogs) / Double(activeHabits.count)
+    dailyRates.append(dailyRate)
+if dailyRates.isEmpty: return nil
+return dailyRates.reduce(0, +) / Double(dailyRates.count)
 ```
 
-**`averageMood`:**
+**Свойства формулы:**
+- День, когда выполнено 4 из 4 привычек → `dailyRate = 1.0` за этот день. Среднее тянется к 100%, как ожидает пользователь.
+- Новая привычка добавлена сегодня — старые дни её просто не учитывают (`activeHabits` за вчера не включает её). Прошлое не наказывается.
+- Метрика устойчива к количеству привычек: 1 привычка или 10 — формула даёт «процент закрытия дня», не штрафует за объём.
+- Если все 7 дней — до создания первой привычки (новый юзер с пустым списком) → `nil`.
+
+**`moodRate`:**
 ```
 entries = fetch JournalEntry where date in [start...end]
-if entries.isEmpty { return nil }
-return Double(entries.map(\.moodScore).reduce(0, +)) / Double(entries.count)
+if entries.isEmpty: return nil
+avg = Double(entries.map(\.moodScore).reduce(0, +)) / Double(entries.count)
+return (avg − 1) / 4                                     // нормировка [1...5] → [0...1]
 ```
 
 **`uniqueDataDays`:**
@@ -203,9 +214,9 @@ ScrollView (vertical) bgPrimary
     │
     └── else:
         ├── HStack(spacing: 12) {                    // 3 метрики горизонтально
-        │       MetricCardView(.tasks,  rate: tasksRate)
-        │       MetricCardView(.habits, rate: habitsRate)
-        │       MetricCardView(.mood,   value: averageMood)
+        │       MetricCardView(kind: .tasks,  rate: tasksRate)
+        │       MetricCardView(kind: .habits, rate: habitsRate)
+        │       MetricCardView(kind: .mood,   rate: moodRate)
         │   }
         │   .padding(.horizontal, 16)
         │
@@ -233,36 +244,39 @@ ScrollView (vertical) bgPrimary
 ### 6.2. `MetricCardView`
 
 ```
-┌──────────────────┐
-│ ЗАДАЧИ           │   .dfCaption()
-│                  │
-│ 75%              │   .dfStat() — 28pt .semibold, accent*
-│                  │
-│ ▰▰▰▰▰▰▱▱▱▱       │   полоса 3pt
-│                  │
-│ закрыто за 7 дн. │   .dfLabel()
-└──────────────────┘
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│ ЗАДАЧИ           │  │ ПРИВЫЧКИ         │  │ НАСТРОЕНИЕ       │   .dfCaption()
+│                  │  │                  │  │                  │
+│ 75%              │  │ 62%              │  │ 84%              │   .dfStat()
+│                  │  │                  │  │                  │
+│ ▰▰▰▰▰▰▱▱▱▱       │  │ ▰▰▰▰▰▱▱▱▱▱       │  │ ▰▰▰▰▰▰▰▰▱▱       │   полоса 3pt
+│                  │  │                  │  │                  │
+│ закрыто за 7 дн. │  │ в среднем за день│  │ в среднем за 7 дн│   .dfLabel()
+└──────────────────┘  └──────────────────┘  └──────────────────┘
 ```
+
+Все три карточки структурно идентичны.
 
 ```swift
 enum MetricKind {
     case tasks   // accentTeal,   "ЗАДАЧИ",     "закрыто за 7 дн."
-    case habits  // accentAmber,  "ПРИВЫЧКИ",   "выполнено за 7 дн."
-    case mood    // accentPurple, "НАСТРОЕНИЕ", "среднее за 7 дн."
+    case habits  // accentAmber,  "ПРИВЫЧКИ",   "в среднем за день"
+    case mood    // accentPurple, "НАСТРОЕНИЕ", "в среднем за 7 дн."
 }
 
 struct MetricCardView: View {
     let kind: MetricKind
-    /// .tasks/.habits → rate ∈ [0...1]; .mood → avg ∈ [1...5]; nil → "—"
-    let value: Double?
+    /// rate ∈ [0.0 ... 1.0]; nil → "—"
+    let rate: Double?
 }
 ```
 
-**Форматирование числа:**
+**Форматирование числа** — единое для всех трёх метрик:
 
-- `.tasks`/`.habits`: `String(format: "%.0f%%", rate * 100)`. Прогресс-бар: `progress = rate`.
-- `.mood`: `String(format: "%.1f", avg) + " / 5"` (формат «4.2 / 5», подпись «/ 5» — 13pt `.regular`, цвет `textSecondary`). Прогресс-бар: `progress = (avg − 1) / 4`.
-- `value == nil`: символ `"—"` цвета `textGhost`, прогресс-бар пустой (только серый фон).
+- `rate != nil`: `"\(Int((rate * 100).rounded()))%"` → «75%», «62%», «84%». Прогресс-бар: `progress = rate`.
+- `rate == nil`: символ `"—"` цвета `textGhost`, прогресс-бар пустой (только серый фон).
+
+Подпись «/ 5» больше не используется. Все три карточки визуально однотипны: лейбл — большое число — бар — описание. Цвет числа и заливки бара различаются по `kind` (teal/amber/purple).
 
 **Прогресс-бар:**
 
@@ -437,7 +451,7 @@ func dfStat() -> some View {
 
 `TestContainer.make()` уже регистрирует все 4 модели (`DailyTask`, `Habit`, `HabitLog`, `JournalEntry`) — изменений схемы не требуется.
 
-### План тестов (20 тестов)
+### План тестов (21 тест)
 
 **`tasksRate` (4):**
 1. `tasksRate_returnsNil_whenNoTasksInWindow`
@@ -445,31 +459,34 @@ func dfStat() -> some View {
 3. `tasksRate_returnsCorrectFraction` — 5 задач, 3 закрыты → 0.6
 4. `tasksRate_ignoresFutureTasks` — `date == today + 1` не учитывается
 
-**`habitsRate` (4):**
+**`habitsRate` (5):**
 5. `habitsRate_returnsNil_whenNoHabits`
-6. `habitsRate_returnsNil_whenAllHabitsCreatedAfterToday`
-7. `habitsRate_usesFullWindow_forOldHabits` — `createdAt == today − 30`, 7 логов в окне → 1.0
-8. `habitsRate_partialWindow_forNewHabit` — `createdAt == today − 2`, 2 лога → 2 / 3 ≈ 0.667
+6. `habitsRate_returnsNil_whenAllHabitsCreatedAfterToday` — все привычки с `createdAt > today` → нет ни одного активного дня → nil
+7. `habitsRate_returnsOne_whenAllHabitsDoneEveryDay` — 2 привычки `createdAt == today − 30`, 14 логов (по 2 на каждый день окна) → среднее `[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]` = 1.0
+8. `habitsRate_perDayAveraging` — 2 привычки старые, день 1: 2/2=1.0, день 2: 1/2=0.5, день 3–7: 0/2=0.0 → среднее (1.0+0.5+0+0+0+0+0)/7 ≈ 0.214
+9. `habitsRate_excludesDaysBeforeFirstHabit` — привычка создана 2 дня назад, делалась оба дня → среднее `[1.0, 1.0]` = 1.0 (первые 5 дней окна skip, нет активных привычек)
 
-**`averageMood` (3):**
-9. `averageMood_returnsNil_whenNoEntries`
-10. `averageMood_simpleAverage` — `[4, 3, 5]` → 4.0
-11. `averageMood_excludesEntriesOutsideWindow`
+**`moodRate` (3):**
+10. `moodRate_returnsNil_whenNoEntries`
+11. `moodRate_normalizesToRate` — записи `[5, 5, 5]` → avg = 5.0 → rate = 1.0; записи `[1, 1]` → rate = 0.0; записи `[3]` → rate = 0.5
+12. `moodRate_excludesEntriesOutsideWindow` — запись с `date == today − 7` игнорируется
 
 **`topStreaks` (3):**
-12. `topStreaks_emptyArray_whenNoHabits`
-13. `topStreaks_filtersOutZeroStreaks`
-14. `topStreaks_sortedDescending_andLimited` — 5 привычек со стриками `[12, 7, 3, 2, 0]`, `limit: 3` → `[12, 7, 3]`
+13. `topStreaks_emptyArray_whenNoHabits`
+14. `topStreaks_filtersOutZeroStreaks`
+15. `topStreaks_sortedDescending_andLimited` — 5 привычек со стриками `[12, 7, 3, 2, 0]`, `limit: 3` → `[12, 7, 3]`
 
 **`moodSeries` (3):**
-15. `moodSeries_returnsExactlySevenEntries` — даже при пустой БД массив длиной 7
-16. `moodSeries_orderedFromOldestToToday` — `series.first.date == today − 6`, `series.last.date == today`
-17. `moodSeries_mapsScoresToCorrectDays`
+16. `moodSeries_returnsExactlySevenEntries` — даже при пустой БД массив длиной 7
+17. `moodSeries_orderedFromOldestToToday` — `series.first.date == today − 6`, `series.last.date == today`
+18. `moodSeries_mapsScoresToCorrectDays`
 
 **`uniqueDataDays` (3):**
-18. `uniqueDataDays_zero_whenNoData`
-19. `uniqueDataDays_countsAcrossAllEntities` — task сегодня + log вчера + entry сегодня → 2
-20. `uniqueDataDays_excludesOutsideWindow`
+19. `uniqueDataDays_zero_whenNoData`
+20. `uniqueDataDays_countsAcrossAllEntities` — task сегодня + log вчера + entry сегодня → 2
+21. `uniqueDataDays_excludesOutsideWindow`
+
+**Итого: 21 тест.**
 
 UI не тестируется (политика проекта — Today/Habits тоже без UI-тестов).
 
@@ -482,7 +499,7 @@ UI не тестируется (политика проекта — Today/Habits
 - **`InsightsView`** — 2 preview через `PreviewContainer`-сценарии:
   - `.empty` — пустая БД → empty state.
   - `.fullWeek` — **новый сценарий**: 7 дней задач (часть закрыта), 3 привычки с разными стриками и `createdAt`, 5 записей дневника со score 3–5.
-- **`MetricCardView`** — `HStack` из 4 кейсов: `.tasks` 75%, `.habits` 62%, `.mood` 4.2, `.mood` `nil` (прочерк).
+- **`MetricCardView`** — `HStack` из 4 кейсов: `.tasks` rate 0.75, `.habits` rate 0.62, `.mood` rate 0.84, `.mood` rate `nil` (прочерк).
 - **`StreakRowView`** — 2 кейса: активный (цветная цифра) и неактивный (серая).
 - **`MoodChartView`** — 2 кейса: полная неделя (7 баров) и неделя с 2 пустыми слотами.
 - **`EmptyInsightsView`** — один preview.
@@ -515,12 +532,53 @@ UI не тестируется (политика проекта — Today/Habits
 
 ---
 
-## 12. Acceptance criteria
+## 12. Открытые вопросы и риски
+
+Места, в которых первая реализация может потребовать корректировки. Каждый пункт явно — чтобы research-агент мог их проверить до начала кодинга, а не после.
+
+### 12.1. Swift Charts: пустые слоты на iOS 26
+
+**Риск:** В §6.4 предполагается, что отсутствие `BarMark` для дня без записи оставит видимый «пустой слот» благодаря явным `AxisMarks(values: series.map(\.date))`. На iOS 26 поведение `chartXAxis` с пользовательскими `values` нужно проверить — возможно, шкала схлопнется и оставшиеся бары сдвинутся, ломая визуальное соответствие «один день = одна позиция».
+
+**План проверки:**
+1. Research-агент читает Apple Docs по `Charts.AxisMarks(values:)` и `chartXScale(domain:)` для iOS 26.
+2. Если поведение не гарантировано — fallback: использовать `chartXScale(domain: [series.first.date ... series.last.date])` явно, либо рисовать невидимый `RectangleMark` высоты 0 для пустых дней (чтобы Chart знал об их позиции).
+3. Если и это не сработает — отказаться от Swift Charts в пользу ручного `HStack` из 7 `Capsule()`-баров. Это последний резерв, не первый выбор.
+
+### 12.2. Размер шрифта `dfStat` (28pt)
+
+**Контекст:** CLAUDE.md фиксирует только три размера: Title 21, Body 13, Caption 10. Ввод 28pt — нарушение чистоты дизайн-системы. 28pt выбран как **SF Pro Title 2** (системный размер, документированный Apple), а не наугад.
+
+**План проверки:**
+1. Имплементатор сначала собирает экран с 28pt.
+2. В симуляторе на iPhone 16 Pro визуально оценивает: не «жирно» ли (карточка занимает 1/3 ширины — около 113pt). Если жирно — снизить до 24pt (SF Pro Title 3). Если потерянно — повысить до 32pt.
+3. **Финальный размер** фиксируется в `CLAUDE.md` после визуального ревью, а не до.
+
+### 12.3. `@Query` без предикатов на больших объёмах
+
+**Риск:** `InsightsContentView` объявляет три `@Query` без предикатов — на каждое изменение в БД пересоздаётся весь массив. На текущих объёмах (десятки задач, единицы привычек, единицы записей дневника) — невидимо. Если пользователь накопит 1000+ задач за год — может стать заметным лагом.
+
+**Решение:**
+- В первой версии — оставляем как есть. YAGNI.
+- В CLAUDE.md → «Известные проблемы» — добавить заметку «InsightsContentView фетчит все записи через @Query без предикатов; при росте объёма данных рассмотреть переход на `@Query(filter:)` по дате окна или прямой `ctx.fetch` с инвалидацией через `NotificationCenter`.»
+- Этот раздел обновляется *по факту реализации*, не до.
+
+### 12.4. Поведение `topStreaks` при наличии «вчерашних» стриков
+
+**Контекст:** `HabitService.streak` возвращает `(value, isActive)` — `isActive == false` означает «вчера сделана, сегодня нет, value = вчерашний стрик». Такие стрики тоже попадают в топ-3, но цифра рисуется серым (`textGhost`).
+
+**Открытый вопрос UX:** Если у пользователя в топ-3 окажется 3 неактивных стрика (все серые) — секция выглядит «потухшей». Возможно, лучше скрывать неактивные стрики целиком, оставляя только `isActive == true`.
+
+**Решение для первой версии:** показываем все, включая неактивные (так в спеке HabitsView). Если по факту секция выглядит «потухшей» — переиграем в следующей итерации, флаг тривиальный (`if streak.isActive`).
+
+---
+
+## 13. Acceptance criteria
 
 - [ ] Build succeeded, 0 warnings (`/build`).
 - [ ] Lint clean (`/lint`).
 - [ ] Format clean (`/format` без изменений).
-- [ ] 20 тестов `InsightsServiceTests` проходят.
+- [ ] 21 тест `InsightsServiceTests` проходит.
 - [ ] При первом запуске (пустая БД) экран показывает empty state «Нужно ещё немного данных».
 - [ ] При наличии 3+ дней с данными показываются: заголовок, 3 метрики горизонтально, секция стриков (если есть `value > 0`), гистограмма настроения.
 - [ ] Закрытие задачи на Today реактивно меняет цифру `% задач` (через `@Query`).
