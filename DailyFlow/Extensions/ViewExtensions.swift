@@ -24,6 +24,11 @@ extension View {
             .background(Color.bgCard, in: .rect(cornerRadius: 12))
     }
 
+    func dfLabel() -> some View {
+        font(.system(size: 11, weight: .regular))
+            .foregroundStyle(Color.textSecondary)
+    }
+
     func dfAccentCard(color: Color) -> some View {
         padding(.horizontal, 16)
             .padding(.vertical, 14)
