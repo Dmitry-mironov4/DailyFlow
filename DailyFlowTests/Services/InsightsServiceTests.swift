@@ -191,5 +191,49 @@ struct InsightsServiceTests {
         try ctx.save()
         #expect(InsightsService.moodRate(today: Self.today, in: ctx) == nil)
     }
+
+    // MARK: — topStreaks
+
+    @Test func topStreaks_emptyArray_whenNoHabits() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let result = InsightsService.topStreaks(limit: 3, today: Self.today, in: ctx)
+        #expect(result.isEmpty)
+    }
+
+    @Test func topStreaks_filtersOutZeroStreaks() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let h = Habit(name: "Inactive", colorHex: "2DD4A0", sortOrder: 0)
+        h.createdAt = Self.day(-30)
+        ctx.insert(h)
+        try ctx.save()
+        // Логов нет → стрик 0 → не должен попасть в результат.
+        let result = InsightsService.topStreaks(limit: 3, today: Self.today, in: ctx)
+        #expect(result.isEmpty)
+    }
+
+    @Test func topStreaks_sortedDescending_andLimited() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        // 4 привычки со стриками 12, 7, 3, 1.
+        let configs: [(name: String, streak: Int)] = [
+            ("Twelve", 12), ("Seven", 7), ("Three", 3), ("One", 1),
+        ]
+        for (i, config) in configs.enumerated() {
+            let habit = Habit(name: config.name, colorHex: "2DD4A0", sortOrder: i)
+            habit.createdAt = Self.day(-30)
+            ctx.insert(habit)
+            for offset in 0..<config.streak {
+                ctx.insert(HabitLog(date: Self.day(-offset), habit: habit))
+            }
+        }
+        try ctx.save()
+        let result = InsightsService.topStreaks(limit: 3, today: Self.today, in: ctx)
+        #expect(result.count == 3)
+        #expect(result[0].value == 12)
+        #expect(result[1].value == 7)
+        #expect(result[2].value == 3)
+    }
 }
 }

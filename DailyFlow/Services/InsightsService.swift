@@ -73,4 +73,25 @@ enum InsightsService {
         let avg = Double(sum) / Double(entries.count)
         return (avg - 1.0) / 4.0
     }
+
+    // MARK: — topStreaks
+
+    /// Топ-N привычек по value текущего стрика. Сортирует по убыванию value,
+    /// фильтрует value > 0. Использует HabitService.streak(for:relativeTo:).
+    static func topStreaks(
+        limit: Int,
+        today: Date,
+        in ctx: ModelContext
+    ) -> [(habit: Habit, value: Int, isActive: Bool)] {
+        guard let habits = try? ctx.fetch(FetchDescriptor<Habit>()) else { return [] }
+        let scored = habits.map { habit -> (habit: Habit, value: Int, isActive: Bool) in
+            let streak = HabitService.streak(for: habit, relativeTo: today)
+            return (habit: habit, value: streak.value, isActive: streak.isActive)
+        }
+        return scored
+            .filter { $0.value > 0 }
+            .sorted { $0.value > $1.value }
+            .prefix(limit)
+            .map { $0 }
+    }
 }
