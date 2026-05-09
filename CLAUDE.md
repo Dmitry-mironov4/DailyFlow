@@ -16,7 +16,7 @@
 - **Локализация:** только русский (ru, development region)
 - **Тема:** только тёмная (`UIUserInterfaceStyle = Dark` в pbxproj)
 - **Xcode-проект:** `DailyFlow.xcodeproj` (Xcode 26, objectVersion 77, synchronized folder references). Деплоймент-таргет iOS 26.4, `SWIFT_VERSION = 6.0`, `TARGETED_DEVICE_FAMILY = "1"` (iPhone only), портретная ориентация.
-- **Статус:** 🟢 Phase 1 завершена. Экран «Сегодня» полностью реализован: все View, TaskService, модели, расширения, тесты. Build succeeded 0 warnings. Дизайн-токены и каркас приложения (ContentView, ViewExtensions) верифицированы в симуляторе iPhone 16 Pro / iOS 26.4. Следующий шаг — экраны «Привычки», «Дневник», «Инсайты» (нужны спеки).
+- **Статус:** 🟢 Phase 1 завершена. Экран «Сегодня» полностью реализован: все View, TaskService, модели, расширения, 13 тестов. Build succeeded 0 warnings. Дизайн-токены и каркас приложения (ContentView, ViewExtensions) верифицированы. CheckboxView: 15pt круг (по спеку §8.3). TodayContentView: обрабатывает scenePhase .background (сброс edit-режима, §12). Следующий шаг — экраны «Привычки», «Дневник», «Инсайты» (нужны спеки).
 
 ---
 
@@ -180,7 +180,7 @@ JournalEntry                     # детали уточняются в спек
 - [x] Кастомный `.claude/` плагин (`/build /lint /format /sim` + skill `dailyflow-context`)
 - [x] CLI-инструменты: swiftformat, swiftlint, xcbeautify
 - [x] Спецификация экрана «Сегодня» ([2026-05-07-today-screen-design.md](./docs/superpowers/specs/2026-05-07-today-screen-design.md))
-- [x] Экран «Сегодня» — полностью реализован, build ok, lint clean, 12 тестов
+- [x] Экран «Сегодня» — полностью реализован, build ok, lint clean, 13 тестов (12 по спеку + 1 доп.)
 - [x] Дизайн-токены и каркас: ContentView (иконки, таб-бар UITabBarAppearance), ViewExtensions (.dfLabel), верифицированы в симуляторе
 - [ ] Экран «Привычки» (нужен спек)
 - [ ] Экран «Дневник» (нужен спек)
