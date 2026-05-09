@@ -11,4 +11,17 @@ enum JournalService {
         )
         return (try? ctx.fetch(descriptor))?.first
     }
+
+    /// Возвращает существующую запись или создаёт новую с дефолтами и инсертит в контекст.
+    /// Дефолты: moodScore = 3, text = "".
+    @discardableResult
+    static func getOrCreateToday(in ctx: ModelContext, now: Date = .now) -> JournalEntry {
+        if let existing = entryForToday(in: ctx, now: now) {
+            return existing
+        }
+        let entry = JournalEntry(date: now)
+        ctx.insert(entry)
+        try? ctx.save()
+        return entry
+    }
 }
