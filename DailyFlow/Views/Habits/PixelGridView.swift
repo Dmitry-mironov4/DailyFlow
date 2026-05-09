@@ -11,7 +11,7 @@ struct PixelGridView: View {
                     .fill(
                         HabitService.isDone(habit, on: date)
                             ? Color(hex: habit.colorHex)
-                            : Color(hex: "333333")
+                            : Color.bgPixelInactive
                     )
                     .frame(width: 28, height: 28)
             }
