@@ -3,7 +3,8 @@ import Foundation
 import SwiftData
 @testable import DailyFlow
 
-@Suite("HabitService") @MainActor
+extension DailyFlowTests {
+@Suite("HabitService", .serialized) @MainActor
 struct HabitServiceTests {
 
     // MARK: — add
@@ -178,4 +179,5 @@ struct HabitServiceTests {
         let remaining = try ctx.fetch(FetchDescriptor<HabitLog>())
         #expect(remaining.isEmpty)
     }
+}
 }

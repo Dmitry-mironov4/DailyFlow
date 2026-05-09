@@ -24,11 +24,8 @@ enum TaskService {
 
     static func setFocus(_ task: DailyTask, in ctx: ModelContext) throws {
         let targetDay = task.date
-        let descriptor = FetchDescriptor<DailyTask>(
-            predicate: #Predicate { $0.date == targetDay && $0.isFocus == true }
-        )
-        let existing = try ctx.fetch(descriptor)
-        for existing in existing {
+        let all = try ctx.fetch(FetchDescriptor<DailyTask>())
+        for existing in all where existing.date == targetDay && existing.isFocus {
             existing.isFocus = false
         }
         task.isFocus = true
@@ -37,12 +34,9 @@ enum TaskService {
 
     static func clearFocus(on date: Date, in ctx: ModelContext) throws {
         let day = Calendar.current.startOfDay(for: date)
-        let descriptor = FetchDescriptor<DailyTask>(
-            predicate: #Predicate { $0.date == day && $0.isFocus == true }
-        )
-        let focused = try ctx.fetch(descriptor)
-        for focused in focused {
-            focused.isFocus = false
+        let all = try ctx.fetch(FetchDescriptor<DailyTask>())
+        for task in all where task.date == day && task.isFocus {
+            task.isFocus = false
         }
         try ctx.save()
     }
@@ -62,13 +56,11 @@ enum TaskService {
     @discardableResult
     static func rolloverPending(into target: Date, in ctx: ModelContext) throws -> Int {
         let targetDay = Calendar.current.startOfDay(for: target)
-        let descriptor = FetchDescriptor<DailyTask>(
-            predicate: #Predicate { $0.date < targetDay && $0.isCompleted == false }
-        )
-        let pending = try ctx.fetch(descriptor)
-        for pending in pending {
-            pending.date = targetDay
-            pending.isFocus = false
+        let all = try ctx.fetch(FetchDescriptor<DailyTask>())
+        let pending = all.filter { $0.date < targetDay && !$0.isCompleted }
+        for task in pending {
+            task.date = targetDay
+            task.isFocus = false
         }
         try ctx.save()
         return pending.count
@@ -77,12 +69,10 @@ enum TaskService {
     @discardableResult
     static func discardPending(before date: Date, in ctx: ModelContext) throws -> Int {
         let day = Calendar.current.startOfDay(for: date)
-        let descriptor = FetchDescriptor<DailyTask>(
-            predicate: #Predicate { $0.date < day && $0.isCompleted == false }
-        )
-        let pending = try ctx.fetch(descriptor)
-        for pending in pending {
-            ctx.delete(pending)
+        let all = try ctx.fetch(FetchDescriptor<DailyTask>())
+        let pending = all.filter { $0.date < day && !$0.isCompleted }
+        for task in pending {
+            ctx.delete(task)
         }
         try ctx.save()
         return pending.count

@@ -65,7 +65,6 @@ struct HabitsView: View {
         .listRowBackground(Color.bgPrimary)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-        .listRowMoveDisabled(true)
     }
 }
 

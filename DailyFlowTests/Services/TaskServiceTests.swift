@@ -3,7 +3,8 @@ import SwiftData
 import Testing
 @testable import DailyFlow
 
-@Suite("TaskService") @MainActor
+extension DailyFlowTests {
+@Suite("TaskService", .serialized) @MainActor
 struct TaskServiceTests {
     private var today: Date {
         Calendar.current.startOfDay(for: .now)
@@ -62,6 +63,7 @@ struct TaskServiceTests {
         let second = DailyTask(title: "Second", date: today)
         ctx.insert(first)
         ctx.insert(second)
+        try ctx.save()
         try TaskService.setFocus(second, in: ctx)
         #expect(first.isFocus == false)
         #expect(second.isFocus == true)
@@ -75,6 +77,7 @@ struct TaskServiceTests {
         let newTask = DailyTask(title: "New", date: today)
         ctx.insert(old)
         ctx.insert(newTask)
+        try ctx.save()
         try TaskService.setFocus(newTask, in: ctx)
         #expect(old.isFocus == true)
         #expect(newTask.isFocus == true)
@@ -85,6 +88,7 @@ struct TaskServiceTests {
         let ctx = container.mainContext
         let task = DailyTask(title: "Focus", date: today, isFocus: true)
         ctx.insert(task)
+        try ctx.save()
         try TaskService.clearFocus(on: today, in: ctx)
         #expect(task.isFocus == false)
     }
@@ -104,6 +108,7 @@ struct TaskServiceTests {
         let yest = try yesterday()
         let old = DailyTask(title: "Old", date: yest)
         ctx.insert(old)
+        try ctx.save()
         let count = try TaskService.rolloverPending(into: today, in: ctx)
         #expect(count == 1)
         #expect(old.date == today)
@@ -115,6 +120,7 @@ struct TaskServiceTests {
         let yest = try yesterday()
         let old = DailyTask(title: "Important", date: yest, isFocus: true)
         ctx.insert(old)
+        try ctx.save()
         try TaskService.rolloverPending(into: today, in: ctx)
         #expect(old.title == "Important")
         #expect(old.isFocus == false)
@@ -141,10 +147,12 @@ struct TaskServiceTests {
         let todayTask = DailyTask(title: "Today", date: today)
         ctx.insert(old)
         ctx.insert(todayTask)
+        try ctx.save()
         let count = try TaskService.discardPending(before: today, in: ctx)
         #expect(count == 1)
         let all = try ctx.fetch(FetchDescriptor<DailyTask>())
         #expect(all.count == 1)
         #expect(all.first?.title == "Today")
     }
+}
 }
