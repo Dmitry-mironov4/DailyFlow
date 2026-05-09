@@ -1,9 +1,8 @@
 import Foundation
 import SwiftData
-import SwiftUI  // Required for Array.move(fromOffsets:toOffset:) extension
+import SwiftUI // Required for Array.move(fromOffsets:toOffset:) extension
 
 enum HabitService {
-
     @discardableResult
     static func add(name: String, colorHex: String, in ctx: ModelContext) -> Habit? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)

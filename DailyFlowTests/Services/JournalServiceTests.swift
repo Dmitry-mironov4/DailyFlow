@@ -6,7 +6,6 @@ import Testing
 extension DailyFlowTests {
     @Suite("JournalService", .serialized) @MainActor
     struct JournalServiceTests {
-
         // MARK: — entryForToday
 
         @Test func entryForToday_returnsNil_whenNoEntry() throws {
@@ -27,7 +26,7 @@ extension DailyFlowTests {
         @Test func entryForToday_returnsNil_whenEntryIsForYesterday() throws {
             let container = try TestContainer.make()
             let ctx = container.mainContext
-            let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: .now)!
+            let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: .now))
             let entry = JournalEntry(date: yesterday, moodScore: 3, text: "")
             ctx.insert(entry)
             try ctx.save()
@@ -41,7 +40,7 @@ extension DailyFlowTests {
             let ctx = container.mainContext
             let entry = JournalService.getOrCreateToday(in: ctx)
             #expect(entry.moodScore == 3)
-            #expect(entry.text == "")
+            #expect(entry.text.isEmpty)
             #expect(entry.date == Calendar.current.startOfDay(for: .now))
         }
 
@@ -62,7 +61,7 @@ extension DailyFlowTests {
             var components = Calendar.current.dateComponents([.year, .month, .day], from: .now)
             components.hour = 13
             components.minute = 27
-            let noon = Calendar.current.date(from: components)!
+            let noon = try #require(Calendar.current.date(from: components))
             let entry = JournalService.getOrCreateToday(in: ctx, now: noon)
             #expect(entry.date == Calendar.current.startOfDay(for: noon))
         }
@@ -146,7 +145,7 @@ extension DailyFlowTests {
             entry.text = "previous"
             try ctx.save()
             JournalService.setText("", in: ctx)
-            #expect(entry.text == "")
+            #expect(entry.text.isEmpty)
         }
 
         @Test func setText_isNoOp_whenSameValue() throws {

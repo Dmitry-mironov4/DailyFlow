@@ -6,7 +6,7 @@ struct MoodPickerView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            ForEach(1...5, id: \.self) { score in
+            ForEach(1 ... 5, id: \.self) { score in
                 MoodTile(score: score, isSelected: score == selectedScore)
                     .contentShape(Rectangle())
                     .onTapGesture { onSelect(score) }

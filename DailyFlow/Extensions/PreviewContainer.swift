@@ -20,6 +20,7 @@ enum PreviewScenario {
 
 extension ModelContainer {
     @MainActor
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     static func preview(_ scenario: PreviewScenario) -> ModelContainer {
         let schema = Schema([DailyTask.self, Habit.self, HabitLog.self, JournalEntry.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -74,14 +75,15 @@ extension ModelContainer {
         case .longStreak:
             let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
             let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
-            ctx.insert(h1); ctx.insert(h2)
+            ctx.insert(h1)
+            ctx.insert(h2)
             // h1: стрик 7 дней подряд включая сегодня
-            for i in 0..<7 {
+            for i in 0 ..< 7 {
                 let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
                 ctx.insert(HabitLog(date: date, habit: h1))
             }
             // h2: стрик 3 дня, но сегодня не выполнена (серая цифра 3)
-            for i in 1...3 {
+            for i in 1 ... 3 {
                 let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
                 ctx.insert(HabitLog(date: date, habit: h2))
             }

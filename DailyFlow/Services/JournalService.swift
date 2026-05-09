@@ -2,7 +2,6 @@ import Foundation
 import SwiftData
 
 enum JournalService {
-
     /// Возвращает запись за сегодня (по startOfDay) или nil если её нет.
     static func entryForToday(in ctx: ModelContext, now: Date = .now) -> JournalEntry? {
         let target = Calendar.current.startOfDay(for: now)
@@ -29,7 +28,7 @@ enum JournalService {
     /// Если значение совпадает с текущим — no-op (updatedAt не меняется).
     /// Если записи нет — создаёт через getOrCreateToday и сразу выставляет.
     static func setMood(_ score: Int, in ctx: ModelContext, now: Date = .now) {
-        precondition((1...5).contains(score), "moodScore must be in 1...5")
+        precondition((1 ... 5).contains(score), "moodScore must be in 1...5")
         let entry = getOrCreateToday(in: ctx, now: now)
         guard entry.moodScore != score else { return }
         entry.moodScore = score
