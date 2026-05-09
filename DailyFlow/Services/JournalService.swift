@@ -36,4 +36,19 @@ enum JournalService {
         entry.updatedAt = now
         try? ctx.save()
     }
+
+    /// Записывает text.
+    /// Если запись отсутствует и text пустой — no-op (не плодим пустые записи).
+    /// Если запись отсутствует и text не пустой — создаёт через getOrCreateToday и пишет text.
+    /// Обновляет updatedAt только если значение реально изменилось.
+    static func setText(_ text: String, in ctx: ModelContext, now: Date = .now) {
+        if entryForToday(in: ctx, now: now) == nil, text.isEmpty {
+            return
+        }
+        let entry = getOrCreateToday(in: ctx, now: now)
+        guard entry.text != text else { return }
+        entry.text = text
+        entry.updatedAt = now
+        try? ctx.save()
+    }
 }

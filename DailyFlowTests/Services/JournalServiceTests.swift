@@ -108,5 +108,57 @@ extension DailyFlowTests {
             JournalService.setMood(5, in: ctx)
             #expect(JournalService.entryForToday(in: ctx)?.moodScore == 5)
         }
+
+        // MARK: — setText
+
+        @Test func setText_createsEntry_whenTextNonEmpty_andAbsent() throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            JournalService.setText("hello", in: ctx)
+            let entry = JournalService.entryForToday(in: ctx)
+            #expect(entry?.text == "hello")
+            #expect(entry?.moodScore == 3)
+        }
+
+        @Test func setText_doesNotCreateEntry_whenTextEmpty_andAbsent() throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            JournalService.setText("", in: ctx)
+            #expect(JournalService.entryForToday(in: ctx) == nil)
+        }
+
+        @Test func setText_updatesText_whenEntryExists() async throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            let entry = JournalService.getOrCreateToday(in: ctx)
+            let originalUpdatedAt = entry.updatedAt
+            try await Task.sleep(for: .milliseconds(10))
+            JournalService.setText("new text", in: ctx)
+            #expect(entry.text == "new text")
+            #expect(entry.moodScore == 3)
+            #expect(entry.updatedAt > originalUpdatedAt)
+        }
+
+        @Test func setText_acceptsEmptyString_whenEntryExists() throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            let entry = JournalService.getOrCreateToday(in: ctx)
+            entry.text = "previous"
+            try ctx.save()
+            JournalService.setText("", in: ctx)
+            #expect(entry.text == "")
+        }
+
+        @Test func setText_isNoOp_whenSameValue() throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            let entry = JournalService.getOrCreateToday(in: ctx)
+            entry.text = "stable"
+            entry.updatedAt = Date(timeIntervalSince1970: 1_000_000)
+            try ctx.save()
+            JournalService.setText("stable", in: ctx)
+            #expect(entry.text == "stable")
+            #expect(entry.updatedAt == Date(timeIntervalSince1970: 1_000_000))
+        }
     }
 }
