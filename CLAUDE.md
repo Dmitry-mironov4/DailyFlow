@@ -16,7 +16,7 @@
 - **Локализация:** только русский (ru, development region)
 - **Тема:** только тёмная (`UIUserInterfaceStyle = Dark` в pbxproj)
 - **Xcode-проект:** `DailyFlow.xcodeproj` (Xcode 26, objectVersion 77, synchronized folder references). Деплоймент-таргет iOS 26.4, `SWIFT_VERSION = 6.0`, `TARGETED_DEVICE_FAMILY = "1"` (iPhone only), портретная ориентация.
-- **Статус:** 🟢 Phase 1 завершена. Экран «Сегодня» полностью реализован: все View, TaskService, модели, расширения, тесты. Build succeeded 0 warnings. Дизайн-токены и каркас приложения (ContentView, ViewExtensions) верифицированы в симуляторе iPhone 16 Pro / iOS 26.4. Следующий шаг — экраны «Привычки», «Дневник», «Инсайты» (нужны спеки).
+- **Статус:** 🟢 Phase 1 завершена. Phase 2 завершена. Экраны «Сегодня» и «Привычки» полностью реализованы: все View, сервисы, модели, расширения, тесты. Build succeeded 0 warnings. Следующий шаг — экраны «Дневник», «Инсайты» (нужны спеки).
 
 ---
 
@@ -57,11 +57,16 @@ DailyFlow/                              # репозиторий
         TaskRowView.swift               # строка задачи в списке + CheckboxView
         AddTaskBarView.swift            # ghost → inline TextField
         RolloverBannerView.swift        # плашка переноса вчерашних задач
-      Habits/                           # экран «Привычки» (отдельный спек)
+      Habits/
+        HabitsView.swift           # List + @Query + drag + ghost-кнопка добавления
+        HabitCardView.swift        # карточка: toggle, streak, PixelGrid, contextMenu
+        PixelGridView.swift        # 7 квадратов 28×28, последние 7 дней
+        AddHabitSheet.swift        # sheet создания/редактирования привычки
       Journal/                          # экран «Дневник» (отдельный спек)
       Insights/                         # экран «Инсайты» (отдельный спек)
     Services/
       TaskService.swift                 # бизнес-логика задач (enum-namespace, stateless)
+      HabitService.swift                # бизнес-логика привычек (enum-namespace, stateless)
       ObsidianService.swift             # экспорт .md через UIDocumentPickerViewController
       SettingsManager.swift             # UserDefaults в App Group
     Extensions/
@@ -76,7 +81,8 @@ DailyFlow/                              # репозиторий
   DailyFlowTests/                       # Swift Testing (не XCTest)
     Helpers/InMemoryContainer.swift     # TestContainer.make() → in-memory ModelContainer
     Models/DailyTaskTests.swift         # 3 теста инициализации
-    Services/TaskServiceTests.swift     # 12 тестов TaskService
+    Services/TaskServiceTests.swift     # 14 тестов TaskService
+    Services/HabitServiceTests.swift    # 15 тестов HabitService
 
   DailyFlowUITests/                     # пустой UI-тест таргет, не используется
 ```
@@ -101,6 +107,7 @@ DailyFlow/                              # репозиторий
 | `text.primary` | `#F2F2F2` | основной текст, заголовки |
 | `text.secondary` | `#888888` | метаданные, неактивные элементы |
 | `text.ghost` | `#666666` | плейсхолдеры, ghost-кнопки (заменён с `#444444`) |
+| `bg.pixelInactive` | `#333333` | неактивные пиксели PixelGrid |
 
 **Запрещено:** градиенты, тени, размытие, полупрозрачные оверлеи, декоративные иконки. Только плоские цвета.
 
@@ -182,7 +189,7 @@ JournalEntry                     # детали уточняются в спек
 - [x] Спецификация экрана «Сегодня» ([2026-05-07-today-screen-design.md](./docs/superpowers/specs/2026-05-07-today-screen-design.md))
 - [x] Экран «Сегодня» — полностью реализован, build ok, lint clean, 12 тестов
 - [x] Дизайн-токены и каркас: ContentView (иконки, таб-бар UITabBarAppearance), ViewExtensions (.dfLabel), верифицированы в симуляторе
-- [ ] Экран «Привычки» (нужен спек)
+- [x] Экран «Привычки» — полностью реализован, build ok, lint clean, 15 тестов HabitService
 - [ ] Экран «Дневник» (нужен спек)
 - [ ] Экран «Инсайты» (нужен спек)
 - [ ] Экспорт в Obsidian (нужен спек)
@@ -194,7 +201,8 @@ JournalEntry                     # детали уточняются в спек
 
 ## Известные проблемы
 
-_Пока пусто._
+- **swipeActions + editMode:** В HabitsView используется `.environment(\.editMode, .constant(.active))` для drag-to-reorder. На iOS 26 нужно проверить, работает ли swipe-to-delete в этом режиме. Если нет — удалить swipeActions, оставить только contextMenu для удаления (или добавить NavigationStack + EditButton).
+- **Color.bgPixelInactive:** Добавлен токен `#333333` для неактивных пикселей PixelGrid. Если дизайн-система расширится, возможно стоит переименовать в более семантическое имя.
 
 ---
 
