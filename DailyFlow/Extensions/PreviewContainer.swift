@@ -16,6 +16,7 @@ enum PreviewScenario {
 }
 
 extension ModelContainer {
+    // swiftlint:disable cyclomatic_complexity function_body_length
     @MainActor
     static func preview(_ scenario: PreviewScenario) -> ModelContainer {
         let schema = Schema([DailyTask.self, Habit.self, HabitLog.self, JournalEntry.self])
@@ -84,44 +85,49 @@ extension ModelContainer {
             }
 
         case .fullWeek:
-            // 7 дней задач: ~70% выполнения.
-            for i in 0..<7 {
-                let day = Calendar.current.date(byAdding: .day, value: -i, to: today)!
-                let count = i % 2 == 0 ? 3 : 2
-                for j in 0..<count {
-                    let task = DailyTask(title: "Задача \(j+1)", date: day)
-                    if (i + j) % 3 != 0 {
-                        task.isCompleted = true
-                        task.completedAt = .now
-                    }
-                    ctx.insert(task)
-                }
-            }
-            // 3 привычки старого возраста, разные стрики.
-            let fwH1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
-            let fwH2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
-            let fwH3 = Habit(name: "Чтение", colorHex: "9B8AE8", sortOrder: 2)
-            for habit in [fwH1, fwH2, fwH3] {
-                habit.createdAt = Calendar.current.date(byAdding: .day, value: -30, to: today)!
-                ctx.insert(habit)
-            }
-            for i in 0..<7 {
-                let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
-                ctx.insert(HabitLog(date: date, habit: fwH1))
-            }
-            for i in 0..<3 {
-                let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
-                ctx.insert(HabitLog(date: date, habit: fwH2))
-            }
-            ctx.insert(HabitLog(date: today, habit: fwH3))
-            // 5 записей в дневник со score 3..5
-            let scores = [3, 4, 5, 4, 5]
-            for (i, score) in scores.enumerated() {
-                let day = Calendar.current.date(byAdding: .day, value: -i, to: today)!
-                ctx.insert(JournalEntry(date: day, moodScore: score))
-            }
+            seedFullWeek(in: ctx, today: today)
         }
 
         return container
+    }
+    // swiftlint:enable cyclomatic_complexity function_body_length
+
+    @MainActor
+    private static func seedFullWeek(in ctx: ModelContext, today: Date) {
+        let cal = Calendar.current
+        // 7 дней задач: ~70% выполнения.
+        for offset in 0..<7 {
+            let day = cal.date(byAdding: .day, value: -offset, to: today)!
+            let count = offset % 2 == 0 ? 3 : 2
+            for index in 0..<count {
+                let task = DailyTask(title: "Задача \(index + 1)", date: day)
+                if (offset + index) % 3 != 0 {
+                    task.isCompleted = true
+                    task.completedAt = .now
+                }
+                ctx.insert(task)
+            }
+        }
+        // 3 привычки старого возраста, разные стрики.
+        let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
+        let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
+        let h3 = Habit(name: "Чтение", colorHex: "9B8AE8", sortOrder: 2)
+        for habit in [h1, h2, h3] {
+            habit.createdAt = cal.date(byAdding: .day, value: -30, to: today)!
+            ctx.insert(habit)
+        }
+        for offset in 0..<7 {
+            ctx.insert(HabitLog(date: cal.date(byAdding: .day, value: -offset, to: today)!, habit: h1))
+        }
+        for offset in 0..<3 {
+            ctx.insert(HabitLog(date: cal.date(byAdding: .day, value: -offset, to: today)!, habit: h2))
+        }
+        ctx.insert(HabitLog(date: today, habit: h3))
+        // 5 записей в дневник со score 3..5
+        let scores = [3, 4, 5, 4, 5]
+        for (offset, score) in scores.enumerated() {
+            let day = cal.date(byAdding: .day, value: -offset, to: today)!
+            ctx.insert(JournalEntry(date: day, moodScore: score))
+        }
     }
 }

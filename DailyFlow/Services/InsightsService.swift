@@ -1,6 +1,21 @@
 import Foundation
 import SwiftData
 
+/// Запись о текущем стрике одной привычки.
+struct StreakItem: Identifiable {
+    let habit: Habit
+    let value: Int
+    let isActive: Bool
+    var id: UUID { habit.id }
+}
+
+/// Точка серии настроения за один день. score == nil → нет записи в этот день.
+struct MoodPoint: Identifiable {
+    let date: Date
+    let score: Int?
+    var id: Date { date }
+}
+
 enum InsightsService {
 
     // MARK: — Окно
@@ -82,11 +97,11 @@ enum InsightsService {
         limit: Int,
         today: Date,
         in ctx: ModelContext
-    ) -> [(habit: Habit, value: Int, isActive: Bool)] {
+    ) -> [StreakItem] {
         guard let habits = try? ctx.fetch(FetchDescriptor<Habit>()) else { return [] }
-        let scored = habits.map { habit -> (habit: Habit, value: Int, isActive: Bool) in
+        let scored = habits.map { habit -> StreakItem in
             let streak = HabitService.streak(for: habit, relativeTo: today)
-            return (habit: habit, value: streak.value, isActive: streak.isActive)
+            return StreakItem(habit: habit, value: streak.value, isActive: streak.isActive)
         }
         return scored
             .filter { $0.value > 0 }
@@ -98,19 +113,17 @@ enum InsightsService {
     // MARK: — moodSeries
 
     /// Ровно 7 элементов от today−6 до today. score == nil → нет записи в этот день.
-    static func moodSeries(today: Date, in ctx: ModelContext)
-        -> [(date: Date, score: Int?)]
-    {
+    static func moodSeries(today: Date, in ctx: ModelContext) -> [MoodPoint] {
         let (start, end) = window(today: today)
         let cal = Calendar.current
         let predicate = #Predicate<JournalEntry> { $0.date >= start && $0.date <= end }
         let entries = (try? ctx.fetch(FetchDescriptor<JournalEntry>(predicate: predicate))) ?? []
         let byDate = Dictionary(uniqueKeysWithValues: entries.map { ($0.date, $0.moodScore) })
 
-        var result: [(date: Date, score: Int?)] = []
+        var result: [MoodPoint] = []
         var cursor = start
         while cursor <= end {
-            result.append((date: cursor, score: byDate[cursor]))
+            result.append(MoodPoint(date: cursor, score: byDate[cursor]))
             cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
         }
         return result

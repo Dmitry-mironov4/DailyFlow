@@ -64,12 +64,12 @@ struct InsightsContentView: View {
         return InsightsService.moodRate(today: today, in: ctx)
     }
 
-    private var topStreaks: [(habit: Habit, value: Int, isActive: Bool)] {
+    private var topStreaks: [StreakItem] {
         _ = dataChangeToken
         return InsightsService.topStreaks(limit: 3, today: today, in: ctx)
     }
 
-    private var moodSeries: [(date: Date, score: Int?)] {
+    private var moodSeries: [MoodPoint] {
         _ = dataChangeToken
         return InsightsService.moodSeries(today: today, in: ctx)
     }
@@ -93,7 +93,7 @@ struct InsightsContentView: View {
                 Text("ЛУЧШИЕ СТРИКИ").dfCaption()
                     .padding(.horizontal, 16)
                 VStack(spacing: 12) {
-                    ForEach(streaks, id: \.habit.id) { item in
+                    ForEach(streaks) { item in
                         StreakRowView(habit: item.habit, value: item.value, isActive: item.isActive)
                     }
                 }

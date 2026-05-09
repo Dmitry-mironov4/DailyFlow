@@ -3,6 +3,8 @@ import Foundation
 import SwiftData
 @testable import DailyFlow
 
+// swiftlint:disable file_length type_body_length
+
 extension DailyFlowTests {
 @Suite("InsightsService", .serialized) @MainActor
 struct InsightsServiceTests {
@@ -85,10 +87,10 @@ struct InsightsServiceTests {
     @Test func habitsRate_returnsNil_whenAllHabitsCreatedAfterToday() throws {
         let container = try TestContainer.make()
         let ctx = container.mainContext
-        let h = Habit(name: "Future", colorHex: "2DD4A0", sortOrder: 0)
+        let habit = Habit(name: "Future", colorHex: "2DD4A0", sortOrder: 0)
         // createdAt вручную в будущее (тестовый трюк).
-        h.createdAt = Self.day(1)
-        ctx.insert(h)
+        habit.createdAt = Self.day(1)
+        ctx.insert(habit)
         try ctx.save()
         #expect(InsightsService.habitsRate(today: Self.today, in: ctx) == nil)
     }
@@ -134,12 +136,12 @@ struct InsightsServiceTests {
         let container = try TestContainer.make()
         let ctx = container.mainContext
         // Привычка создана 2 дня назад. Дни -6...-3 не имеют активных привычек → skip.
-        let h = Habit(name: "Newcomer", colorHex: "2DD4A0", sortOrder: 0)
-        h.createdAt = Self.day(-2)
-        ctx.insert(h)
-        ctx.insert(HabitLog(date: Self.day(-2), habit: h))
-        ctx.insert(HabitLog(date: Self.day(-1), habit: h))
-        ctx.insert(HabitLog(date: Self.day(0), habit: h))
+        let habit = Habit(name: "Newcomer", colorHex: "2DD4A0", sortOrder: 0)
+        habit.createdAt = Self.day(-2)
+        ctx.insert(habit)
+        ctx.insert(HabitLog(date: Self.day(-2), habit: habit))
+        ctx.insert(HabitLog(date: Self.day(-1), habit: habit))
+        ctx.insert(HabitLog(date: Self.day(0), habit: habit))
         try ctx.save()
         // Активны 3 дня (-2, -1, 0), все сделаны → среднее [1.0, 1.0, 1.0] = 1.0.
         let rate = InsightsService.habitsRate(today: Self.today, in: ctx)
@@ -204,9 +206,9 @@ struct InsightsServiceTests {
     @Test func topStreaks_filtersOutZeroStreaks() throws {
         let container = try TestContainer.make()
         let ctx = container.mainContext
-        let h = Habit(name: "Inactive", colorHex: "2DD4A0", sortOrder: 0)
-        h.createdAt = Self.day(-30)
-        ctx.insert(h)
+        let habit = Habit(name: "Inactive", colorHex: "2DD4A0", sortOrder: 0)
+        habit.createdAt = Self.day(-30)
+        ctx.insert(habit)
         try ctx.save()
         // Логов нет → стрик 0 → не должен попасть в результат.
         let result = InsightsService.topStreaks(limit: 3, today: Self.today, in: ctx)
@@ -281,10 +283,10 @@ struct InsightsServiceTests {
         let container = try TestContainer.make()
         let ctx = container.mainContext
         // Task сегодня + Habit log вчера + Journal сегодня → 2 уникальных дня.
-        let h = Habit(name: "H", colorHex: "2DD4A0", sortOrder: 0)
-        ctx.insert(h)
+        let habit = Habit(name: "H", colorHex: "2DD4A0", sortOrder: 0)
+        ctx.insert(habit)
         ctx.insert(DailyTask(title: "T", date: Self.today))
-        ctx.insert(HabitLog(date: Self.day(-1), habit: h))
+        ctx.insert(HabitLog(date: Self.day(-1), habit: habit))
         ctx.insert(JournalEntry(date: Self.today, moodScore: 4))
         try ctx.save()
         #expect(InsightsService.uniqueDataDays(today: Self.today, in: ctx) == 2)
@@ -299,3 +301,5 @@ struct InsightsServiceTests {
     }
 }
 }
+
+// swiftlint:enable file_length type_body_length
