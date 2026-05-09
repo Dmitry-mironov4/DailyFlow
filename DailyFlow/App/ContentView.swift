@@ -9,7 +9,7 @@ struct ContentView: View {
                 .tabItem { Label("Привычки", systemImage: "square.grid.2x2") }
             placeholder
                 .tabItem { Label("Дневник", systemImage: "note.text") }
-            placeholder
+            InsightsView()
                 .tabItem { Label("Инсайты", systemImage: "chart.bar") }
         }
         .toolbarBackground(.hidden, for: .tabBar)
