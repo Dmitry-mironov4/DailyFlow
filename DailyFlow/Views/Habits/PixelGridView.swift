@@ -14,6 +14,7 @@ struct PixelGridView: View {
                             : Color.bgPixelInactive
                     )
                     .frame(width: 28, height: 28)
+                    .animation(.easeInOut(duration: 0.15), value: HabitService.isDone(habit, on: date))
             }
         }
     }
@@ -35,8 +36,17 @@ struct PixelGridView: View {
 }
 
 #Preview("С выполнениями") {
-    PixelGridView(habit: Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 0))
+    let container = ModelContainer.preview(.empty)
+    let habit = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 0)
+    container.mainContext.insert(habit)
+    let today = Calendar.current.startOfDay(for: .now)
+    for i in 0..<5 {
+        let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
+        container.mainContext.insert(HabitLog(date: date, habit: habit))
+    }
+    return PixelGridView(habit: habit)
         .padding()
         .background(Color.bgCard)
+        .modelContainer(container)
         .preferredColorScheme(.dark)
 }
