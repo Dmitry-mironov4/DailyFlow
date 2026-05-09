@@ -16,7 +16,7 @@
 - **Локализация:** только русский (ru, development region)
 - **Тема:** только тёмная (`UIUserInterfaceStyle = Dark` в pbxproj)
 - **Xcode-проект:** `DailyFlow.xcodeproj` (Xcode 26, objectVersion 77, synchronized folder references). Деплоймент-таргет iOS 26.4, `SWIFT_VERSION = 6.0`, `TARGETED_DEVICE_FAMILY = "1"` (iPhone only), портретная ориентация.
-- **Статус:** 🟢 Phase 1 завершена. Phase 2 завершена. Экраны «Сегодня», «Привычки» и «Дневник» полностью реализованы: все View, сервисы, модели, расширения, тесты. Build succeeded 0 warnings. Следующий шаг — экспорт в Obsidian (нужен спек) и экран «Инсайты» (нужен спек).
+- **Статус:** 🟢 Phase 1 завершена. Phase 2 завершена. Phase 3 завершена. Phase 4 завершена. Экраны «Сегодня», «Привычки», «Инсайты», «Дневник» полностью реализованы: все View, сервисы, модели, расширения, тесты. Build succeeded 0 warnings, 53 теста проходят.
 
 ---
 
@@ -62,17 +62,26 @@ DailyFlow/                              # репозиторий
         HabitCardView.swift        # карточка: toggle, streak, PixelGrid, contextMenu
         PixelGridView.swift        # 7 квадратов 28×28, последние 7 дней
         AddHabitSheet.swift        # sheet создания/редактирования привычки
-      Journal/
-        JournalView.swift               # обёртка: хедер + MoodPicker + Editor
-        MoodPickerView.swift            # 5 цифровых тайлов 1–5
-        JournalEditorView.swift         # TextEditor с debounce-autosave
-      Insights/                         # экран «Инсайты» (отдельный спек)
+      Journal/                          # экран «Дневник» (отдельный спек)
+      Insights/
+        InsightsView.swift              # обёртка scenePhase + dateAnchor
+        InsightsContentView.swift       # ScrollView + 3 секции + empty state
+        MetricCardView.swift            # 1 из 3 метрик (число + бар + лейбл)
+        StreakRowView.swift             # строка топ-стрика
+        MoodChartView.swift             # гистограмма Swift Charts
+        EmptyInsightsView.swift         # текст по центру при <3 дней данных
     Services/
       TaskService.swift                 # бизнес-логика задач (enum-namespace, stateless)
       HabitService.swift                # бизнес-логика привычек (enum-namespace, stateless)
       JournalService.swift              # бизнес-логика дневника (enum-namespace, stateless)
       ObsidianService.swift             # экспорт .md через UIDocumentPickerViewController
       SettingsManager.swift             # UserDefaults в App Group
+      InsightsService.swift             # бизнес-логика инсайтов (enum-namespace, stateless)
+      Journal/
+        JournalView.swift               # обёртка: хедер + MoodPicker + Editor
+        MoodPickerView.swift            # 5 цифровых тайлов 1–5
+        JournalEditorView.swift         # TextEditor с debounce-autosave
+      Insights/                         # экран «Инсайты» (отдельный спек)
     Extensions/
       ColorExtensions.swift             # токены палитры (.bgPrimary, .accentTeal, …)
       ViewExtensions.swift              # модификаторы (.dfTitle, .dfBody, .dfCaption, .dfLabel, .dfCard, .dfAccentCard)
@@ -87,6 +96,9 @@ DailyFlow/                              # репозиторий
     Models/DailyTaskTests.swift         # 3 теста инициализации
     Services/TaskServiceTests.swift     # 14 тестов TaskService
     Services/HabitServiceTests.swift    # 15 тестов HabitService
+    Services/InsightsServiceTests.swift # 21 тест InsightsService
+
+  DailyFlowUITests/                     # пустой UI-тест таргет, не используется
 ```
 
 **Synchronized folder references:** Xcode 26 (`PBXFileSystemSynchronizedRootGroup`) автоматически подхватывает любой новый `.swift` файл в `DailyFlow/`, `DailyFlowTests/`. Создавай файлы через Bash/Write — Xcode сам добавит их в нужный таргет.
@@ -120,6 +132,7 @@ DailyFlow/                              # репозиторий
 | Title | 21pt | `.medium` | — |
 | Body | 13pt | `.regular` | — |
 | Caption | 10pt | `.regular` | letter-spacing 0.5pt, ALL CAPS |
+| Stat | 28pt | `.semibold` | для KPI-цифр на инсайтах (`.dfStat()`) |
 
 **Динамический тип:** да, минимум поддержать `.medium`–`.xxxLarge`.
 
@@ -192,6 +205,8 @@ JournalEntry                     # детали уточняются в спек
 - [x] Экран «Сегодня» — полностью реализован, build ok, lint clean, 13 тестов (12 по спеку + 1 доп.)
 - [x] Дизайн-токены и каркас: ContentView (иконки, таб-бар UITabBarAppearance), ViewExtensions (.dfLabel), верифицированы в симуляторе
 - [x] Экран «Привычки» — полностью реализован, build ok, lint clean, 15 тестов HabitService
+- [x] Экран «Инсайты» — полностью реализован, build ok, lint clean, 21 тест InsightsService
+- [x] Спецификация экрана «Инсайты» ([2026-05-10-insights-screen-design.md](./docs/superpowers/specs/2026-05-10-insights-screen-design.md))
 - [x] Экран «Дневник» — полностью реализован, build ok, lint clean, 15 тестов JournalService
 - [ ] Экран «Инсайты» (нужен спек)
 - [ ] Экспорт в Obsidian (нужен спек)

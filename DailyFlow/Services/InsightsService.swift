@@ -1,0 +1,155 @@
+import Foundation
+import SwiftData
+
+/// Запись о текущем стрике одной привычки.
+struct StreakItem: Identifiable {
+    let habit: Habit
+    let value: Int
+    let isActive: Bool
+    var id: UUID { habit.id }
+}
+
+/// Точка серии настроения за один день. score == nil → нет записи в этот день.
+struct MoodPoint: Identifiable {
+    let date: Date
+    let score: Int?
+    var id: Date { date }
+}
+
+enum InsightsService {
+
+    // MARK: — Окно
+
+    /// Возвращает (start, end) окна [today−6 ... today], обе даты на startOfDay.
+    private static func window(today: Date) -> (start: Date, end: Date) {
+        let cal = Calendar.current
+        let end = cal.startOfDay(for: today)
+        let start = cal.date(byAdding: .day, value: -6, to: end)!
+        return (start, end)
+    }
+
+    // MARK: — tasksRate
+
+    /// Доля выполненных задач за окно [today−6 ... today]. nil если задач 0.
+    /// Возвращает значение в [0.0 ... 1.0].
+    static func tasksRate(today: Date, in ctx: ModelContext) -> Double? {
+        let (start, end) = window(today: today)
+        let predicate = #Predicate<DailyTask> { $0.date >= start && $0.date <= end }
+        guard let tasks = try? ctx.fetch(FetchDescriptor<DailyTask>(predicate: predicate)),
+              !tasks.isEmpty else { return nil }
+        let completed = tasks.lazy.filter(\.isCompleted).count
+        return Double(completed) / Double(tasks.count)
+    }
+
+    // MARK: — habitsRate
+
+    /// Среднее «дневной доли выполненных привычек» по окну.
+    /// Для каждого дня окна с активными привычками (createdAt.startOfDay <= day)
+    /// считаем activeLogs / activeHabits. Возвращает среднее в [0...1].
+    /// nil если ни одного активного дня.
+    static func habitsRate(today: Date, in ctx: ModelContext) -> Double? {
+        let (start, end) = window(today: today)
+        let cal = Calendar.current
+        guard let habits = try? ctx.fetch(FetchDescriptor<Habit>()) else { return nil }
+        if habits.isEmpty { return nil }
+
+        // Собираем все даты окна (7 шт.) от start до end включительно.
+        var dates: [Date] = []
+        var cursor = start
+        while cursor <= end {
+            dates.append(cursor)
+            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
+        }
+
+        var dailyRates: [Double] = []
+        for day in dates {
+            let activeHabits = habits.filter { cal.startOfDay(for: $0.createdAt) <= day }
+            if activeHabits.isEmpty { continue }
+            let activeLogs = activeHabits.reduce(0) { acc, habit in
+                acc + habit.logs.filter { $0.date == day }.count
+            }
+            dailyRates.append(Double(activeLogs) / Double(activeHabits.count))
+        }
+        if dailyRates.isEmpty { return nil }
+        return dailyRates.reduce(0, +) / Double(dailyRates.count)
+    }
+
+    // MARK: — moodRate
+
+    /// Среднее настроение за окно, нормированное в [0...1].
+    /// rate = (avg − 1) / 4, где avg = среднее JournalEntry.moodScore.
+    /// nil если 0 записей.
+    static func moodRate(today: Date, in ctx: ModelContext) -> Double? {
+        let (start, end) = window(today: today)
+        let predicate = #Predicate<JournalEntry> { $0.date >= start && $0.date <= end }
+        guard let entries = try? ctx.fetch(FetchDescriptor<JournalEntry>(predicate: predicate)),
+              !entries.isEmpty else { return nil }
+        let sum = entries.reduce(0) { $0 + $1.moodScore }
+        let avg = Double(sum) / Double(entries.count)
+        return (avg - 1.0) / 4.0
+    }
+
+    // MARK: — topStreaks
+
+    /// Топ-N привычек по value текущего стрика. Сортирует по убыванию value,
+    /// фильтрует value > 0. Использует HabitService.streak(for:relativeTo:).
+    static func topStreaks(
+        limit: Int,
+        today: Date,
+        in ctx: ModelContext
+    ) -> [StreakItem] {
+        guard let habits = try? ctx.fetch(FetchDescriptor<Habit>()) else { return [] }
+        let scored = habits.map { habit -> StreakItem in
+            let streak = HabitService.streak(for: habit, relativeTo: today)
+            return StreakItem(habit: habit, value: streak.value, isActive: streak.isActive)
+        }
+        return scored
+            .filter { $0.value > 0 }
+            .sorted { $0.value > $1.value }
+            .prefix(limit)
+            .map { $0 }
+    }
+
+    // MARK: — moodSeries
+
+    /// Ровно 7 элементов от today−6 до today. score == nil → нет записи в этот день.
+    static func moodSeries(today: Date, in ctx: ModelContext) -> [MoodPoint] {
+        let (start, end) = window(today: today)
+        let cal = Calendar.current
+        let predicate = #Predicate<JournalEntry> { $0.date >= start && $0.date <= end }
+        let entries = (try? ctx.fetch(FetchDescriptor<JournalEntry>(predicate: predicate))) ?? []
+        let byDate = Dictionary(uniqueKeysWithValues: entries.map { ($0.date, $0.moodScore) })
+
+        var result: [MoodPoint] = []
+        var cursor = start
+        while cursor <= end {
+            result.append(MoodPoint(date: cursor, score: byDate[cursor]))
+            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
+        }
+        return result
+    }
+
+    // MARK: — uniqueDataDays
+
+    /// Количество уникальных дней в окне с хотя бы одной записью
+    /// в DailyTask, HabitLog или JournalEntry.
+    static func uniqueDataDays(today: Date, in ctx: ModelContext) -> Int {
+        let (start, end) = window(today: today)
+        var dates = Set<Date>()
+
+        let taskPred = #Predicate<DailyTask> { $0.date >= start && $0.date <= end }
+        let logPred = #Predicate<HabitLog> { $0.date >= start && $0.date <= end }
+        let entryPred = #Predicate<JournalEntry> { $0.date >= start && $0.date <= end }
+
+        if let tasks = try? ctx.fetch(FetchDescriptor<DailyTask>(predicate: taskPred)) {
+            dates.formUnion(tasks.map(\.date))
+        }
+        if let logs = try? ctx.fetch(FetchDescriptor<HabitLog>(predicate: logPred)) {
+            dates.formUnion(logs.map(\.date))
+        }
+        if let entries = try? ctx.fetch(FetchDescriptor<JournalEntry>(predicate: entryPred)) {
+            dates.formUnion(entries.map(\.date))
+        }
+        return dates.count
+    }
+}
