@@ -94,4 +94,25 @@ enum InsightsService {
             .prefix(limit)
             .map { $0 }
     }
+
+    // MARK: — moodSeries
+
+    /// Ровно 7 элементов от today−6 до today. score == nil → нет записи в этот день.
+    static func moodSeries(today: Date, in ctx: ModelContext)
+        -> [(date: Date, score: Int?)]
+    {
+        let (start, end) = window(today: today)
+        let cal = Calendar.current
+        let predicate = #Predicate<JournalEntry> { $0.date >= start && $0.date <= end }
+        let entries = (try? ctx.fetch(FetchDescriptor<JournalEntry>(predicate: predicate))) ?? []
+        let byDate = Dictionary(uniqueKeysWithValues: entries.map { ($0.date, $0.moodScore) })
+
+        var result: [(date: Date, score: Int?)] = []
+        var cursor = start
+        while cursor <= end {
+            result.append((date: cursor, score: byDate[cursor]))
+            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
+        }
+        return result
+    }
 }

@@ -235,5 +235,38 @@ struct InsightsServiceTests {
         #expect(result[1].value == 7)
         #expect(result[2].value == 3)
     }
+
+    // MARK: — moodSeries
+
+    @Test func moodSeries_returnsExactlySevenEntries() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let series = InsightsService.moodSeries(today: Self.today, in: ctx)
+        #expect(series.count == 7)
+        for point in series {
+            #expect(point.score == nil)
+        }
+    }
+
+    @Test func moodSeries_orderedFromOldestToToday() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let series = InsightsService.moodSeries(today: Self.today, in: ctx)
+        #expect(series.first?.date == Self.day(-6))
+        #expect(series.last?.date == Self.day(0))
+    }
+
+    @Test func moodSeries_mapsScoresToCorrectDays() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        ctx.insert(JournalEntry(date: Self.day(-3), moodScore: 4))
+        ctx.insert(JournalEntry(date: Self.day(0), moodScore: 5))
+        try ctx.save()
+        let series = InsightsService.moodSeries(today: Self.today, in: ctx)
+        #expect(series.count == 7)
+        #expect(series[3].score == 4)   // index 3 == day(-3) (0..6 = -6..0)
+        #expect(series[6].score == 5)   // index 6 == today
+        #expect(series[0].score == nil) // day(-6) — нет записи
+    }
 }
 }
