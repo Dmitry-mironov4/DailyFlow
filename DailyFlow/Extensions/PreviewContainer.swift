@@ -7,6 +7,10 @@ enum PreviewScenario {
     case mixed
     case withRollover
     case editingFirst
+    // Привычки:
+    case threeHabits
+    case allHabitsDoneToday
+    case longStreak
 }
 
 extension ModelContainer {
@@ -43,6 +47,39 @@ extension ModelContainer {
 
         case .editingFirst:
             ctx.insert(DailyTask(title: "Задача в режиме редактирования", date: today))
+
+        case .threeHabits:
+            let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
+            let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
+            let h3 = Habit(name: "Чтение", colorHex: "9B8AE8", sortOrder: 2)
+            [h1, h2, h3].forEach { ctx.insert($0) }
+            // h1 выполнена сегодня
+            ctx.insert(HabitLog(date: today, habit: h1))
+            // h2 выполнена вчера (стрик 1, серый)
+            let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
+            ctx.insert(HabitLog(date: yesterday, habit: h2))
+
+        case .allHabitsDoneToday:
+            let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
+            let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
+            let h3 = Habit(name: "Чтение", colorHex: "9B8AE8", sortOrder: 2)
+            [h1, h2, h3].forEach { ctx.insert($0) }
+            [h1, h2, h3].forEach { ctx.insert(HabitLog(date: today, habit: $0)) }
+
+        case .longStreak:
+            let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
+            let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
+            ctx.insert(h1); ctx.insert(h2)
+            // h1: стрик 7 дней подряд включая сегодня
+            for i in 0..<7 {
+                let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
+                ctx.insert(HabitLog(date: date, habit: h1))
+            }
+            // h2: стрик 3 дня, но сегодня не выполнена (серая цифра 3)
+            for i in 1...3 {
+                let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
+                ctx.insert(HabitLog(date: date, habit: h2))
+            }
         }
 
         return container
