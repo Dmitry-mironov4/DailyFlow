@@ -11,6 +11,11 @@ enum PreviewScenario {
     case threeHabits
     case allHabitsDoneToday
     case longStreak
+    // Дневник:
+    case emptyJournal
+    case moodOnly
+    case fullJournal
+    case longJournal
 }
 
 extension ModelContainer {
@@ -80,6 +85,23 @@ extension ModelContainer {
                 let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
                 ctx.insert(HabitLog(date: date, habit: h2))
             }
+
+        case .emptyJournal:
+            break
+
+        case .moodOnly:
+            ctx.insert(JournalEntry(date: today, moodScore: 4, text: ""))
+
+        case .fullJournal:
+            ctx.insert(JournalEntry(
+                date: today,
+                moodScore: 5,
+                text: "Сегодня прошёл день в потоке. Завершил спецификацию журнала, прошлись по всем edge-кейсам, спокойно."
+            ))
+
+        case .longJournal:
+            let longText = String(repeating: "Длинный текст записи. ", count: 100)
+            ctx.insert(JournalEntry(date: today, moodScore: 3, text: longText))
         }
 
         return container
