@@ -83,11 +83,9 @@ DailyFlow/                              # репозиторий
     Models/DailyTaskTests.swift         # 3 теста инициализации
     Services/TaskServiceTests.swift     # 14 тестов TaskService
     Services/HabitServiceTests.swift    # 15 тестов HabitService
-
-  DailyFlowUITests/                     # пустой UI-тест таргет, не используется
 ```
 
-**Synchronized folder references:** Xcode 26 (`PBXFileSystemSynchronizedRootGroup`) автоматически подхватывает любой новый `.swift` файл в `DailyFlow/`, `DailyFlowTests/`, `DailyFlowUITests/`. Создавай файлы через Bash/Write — Xcode сам добавит их в нужный таргет.
+**Synchronized folder references:** Xcode 26 (`PBXFileSystemSynchronizedRootGroup`) автоматически подхватывает любой новый `.swift` файл в `DailyFlow/`, `DailyFlowTests/`. Создавай файлы через Bash/Write — Xcode сам добавит их в нужный таргет.
 
 **Правило:** каждый View-файл ≤ 150 строк. Если становится длиннее — выноси компоненты.
 
