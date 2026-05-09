@@ -1,6 +1,6 @@
 import Foundation
 import SwiftData
-import SwiftUI
+import SwiftUI  // Required for Array.move(fromOffsets:toOffset:) extension
 
 enum HabitService {
 

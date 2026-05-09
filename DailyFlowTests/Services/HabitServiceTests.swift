@@ -1,7 +1,6 @@
 import Testing
 import Foundation
 import SwiftData
-import SwiftUI
 @testable import DailyFlow
 
 @Suite("HabitService") @MainActor
@@ -22,6 +21,28 @@ struct HabitServiceTests {
         let h2 = HabitService.add(name: "Second", colorHex: "F0A23B", in: ctx)
         #expect(h1?.sortOrder == 0)
         #expect(h2?.sortOrder == 1)
+    }
+
+    // MARK: — update
+
+    @Test func update_ignoresEmptyName() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let habit = Habit(name: "Original", colorHex: "2DD4A0", sortOrder: 0)
+        ctx.insert(habit)
+        HabitService.update(habit, name: "  ", colorHex: "F0A23B", in: ctx)
+        #expect(habit.name == "Original")
+        #expect(habit.colorHex == "F0A23B")
+    }
+
+    @Test func update_appliesNameAndColor() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        let habit = Habit(name: "Original", colorHex: "2DD4A0", sortOrder: 0)
+        ctx.insert(habit)
+        HabitService.update(habit, name: "Updated", colorHex: "9B8AE8", in: ctx)
+        #expect(habit.name == "Updated")
+        #expect(habit.colorHex == "9B8AE8")
     }
 
     // MARK: — toggleToday / isDone
