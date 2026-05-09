@@ -16,4 +16,9 @@ extension Color {
         let blue = Double(hex & 0xFF) / 255
         self.init(red: red, green: green, blue: blue)
     }
+
+    init(hex string: String) {
+        let cleaned = string.hasPrefix("#") ? String(string.dropFirst()) : string
+        self.init(hex: UInt32(cleaned, radix: 16) ?? 0)
+    }
 }
