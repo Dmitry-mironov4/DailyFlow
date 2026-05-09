@@ -16,7 +16,7 @@
 - **Локализация:** только русский (ru, development region)
 - **Тема:** только тёмная (`UIUserInterfaceStyle = Dark` в pbxproj)
 - **Xcode-проект:** `DailyFlow.xcodeproj` (Xcode 26, objectVersion 77, synchronized folder references). Деплоймент-таргет iOS 26.4, `SWIFT_VERSION = 6.0`, `TARGETED_DEVICE_FAMILY = "1"` (iPhone only), портретная ориентация.
-- **Статус:** 🟢 Phase 1 завершена. Phase 2 завершена. Phase 3 завершена. Экраны «Сегодня», «Привычки», «Инсайты» полностью реализованы: все View, сервисы, модели, расширения, тесты. Build succeeded 0 warnings, 53 теста проходят. Следующий шаг — экран «Дневник» (нужен спек).
+- **Статус:** 🟢 Phase 1 завершена. Phase 2 завершена. Phase 3 завершена. Phase 4 завершена. Экраны «Сегодня», «Привычки», «Инсайты», «Дневник» полностью реализованы: все View, сервисы, модели, расширения, тесты. Build succeeded 0 warnings, 53 теста проходят.
 
 ---
 
@@ -73,9 +73,15 @@ DailyFlow/                              # репозиторий
     Services/
       TaskService.swift                 # бизнес-логика задач (enum-namespace, stateless)
       HabitService.swift                # бизнес-логика привычек (enum-namespace, stateless)
-      InsightsService.swift             # бизнес-логика инсайтов (enum-namespace, stateless)
+      JournalService.swift              # бизнес-логика дневника (enum-namespace, stateless)
       ObsidianService.swift             # экспорт .md через UIDocumentPickerViewController
       SettingsManager.swift             # UserDefaults в App Group
+      InsightsService.swift             # бизнес-логика инсайтов (enum-namespace, stateless)
+      Journal/
+        JournalView.swift               # обёртка: хедер + MoodPicker + Editor
+        MoodPickerView.swift            # 5 цифровых тайлов 1–5
+        JournalEditorView.swift         # TextEditor с debounce-autosave
+      Insights/                         # экран «Инсайты» (отдельный спек)
     Extensions/
       ColorExtensions.swift             # токены палитры (.bgPrimary, .accentTeal, …)
       ViewExtensions.swift              # модификаторы (.dfTitle, .dfBody, .dfCaption, .dfLabel, .dfCard, .dfAccentCard)
@@ -95,7 +101,7 @@ DailyFlow/                              # репозиторий
   DailyFlowUITests/                     # пустой UI-тест таргет, не используется
 ```
 
-**Synchronized folder references:** Xcode 26 (`PBXFileSystemSynchronizedRootGroup`) автоматически подхватывает любой новый `.swift` файл в `DailyFlow/`, `DailyFlowTests/`, `DailyFlowUITests/`. Создавай файлы через Bash/Write — Xcode сам добавит их в нужный таргет.
+**Synchronized folder references:** Xcode 26 (`PBXFileSystemSynchronizedRootGroup`) автоматически подхватывает любой новый `.swift` файл в `DailyFlow/`, `DailyFlowTests/`. Создавай файлы через Bash/Write — Xcode сам добавит их в нужный таргет.
 
 **Правило:** каждый View-файл ≤ 150 строк. Если становится длиннее — выноси компоненты.
 
@@ -201,7 +207,8 @@ JournalEntry                     # детали уточняются в спек
 - [x] Экран «Привычки» — полностью реализован, build ok, lint clean, 15 тестов HabitService
 - [x] Экран «Инсайты» — полностью реализован, build ok, lint clean, 21 тест InsightsService
 - [x] Спецификация экрана «Инсайты» ([2026-05-10-insights-screen-design.md](./docs/superpowers/specs/2026-05-10-insights-screen-design.md))
-- [ ] Экран «Дневник» (нужен спек)
+- [x] Экран «Дневник» — полностью реализован, build ok, lint clean, 15 тестов JournalService
+- [ ] Экран «Инсайты» (нужен спек)
 - [ ] Экспорт в Obsidian (нужен спек)
 - [ ] Виджеты (нужен спек)
 - [ ] Локальные нотификации
