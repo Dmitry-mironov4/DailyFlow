@@ -3,6 +3,7 @@ import SwiftUI
 extension Color {
     static let bgPrimary = Color(hex: 0x0D0D0D)
     static let bgCard = Color(hex: 0x1A1A1A)
+    static let bgPixelInactive = Color(hex: 0x333333)
     static let accentTeal = Color(hex: 0x2DD4A0)
     static let accentAmber = Color(hex: 0xF0A23B)
     static let accentPurple = Color(hex: 0x9B8AE8)
@@ -15,5 +16,10 @@ extension Color {
         let green = Double((hex >> 8) & 0xFF) / 255
         let blue = Double(hex & 0xFF) / 255
         self.init(red: red, green: green, blue: blue)
+    }
+
+    init(hex string: String) {
+        let cleaned = string.hasPrefix("#") ? String(string.dropFirst()) : string
+        self.init(hex: UInt32(cleaned, radix: 16) ?? 0)
     }
 }
