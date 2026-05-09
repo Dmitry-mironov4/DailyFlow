@@ -24,4 +24,16 @@ enum JournalService {
         try? ctx.save()
         return entry
     }
+
+    /// Устанавливает moodScore.
+    /// Если значение совпадает с текущим — no-op (updatedAt не меняется).
+    /// Если записи нет — создаёт через getOrCreateToday и сразу выставляет.
+    static func setMood(_ score: Int, in ctx: ModelContext, now: Date = .now) {
+        precondition((1...5).contains(score), "moodScore must be in 1...5")
+        let entry = getOrCreateToday(in: ctx, now: now)
+        guard entry.moodScore != score else { return }
+        entry.moodScore = score
+        entry.updatedAt = now
+        try? ctx.save()
+    }
 }

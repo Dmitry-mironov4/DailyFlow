@@ -66,5 +66,47 @@ extension DailyFlowTests {
             let entry = JournalService.getOrCreateToday(in: ctx, now: noon)
             #expect(entry.date == Calendar.current.startOfDay(for: noon))
         }
+
+        // MARK: — setMood
+
+        @Test func setMood_createsEntry_andSetsScore_whenAbsent() throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            JournalService.setMood(4, in: ctx)
+            let entry = JournalService.entryForToday(in: ctx)
+            #expect(entry?.moodScore == 4)
+        }
+
+        @Test func setMood_updatesScore_whenEntryExists() async throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            let entry = JournalService.getOrCreateToday(in: ctx)
+            let originalUpdatedAt = entry.updatedAt
+            try await Task.sleep(for: .milliseconds(10))
+            JournalService.setMood(5, in: ctx)
+            #expect(entry.moodScore == 5)
+            #expect(entry.updatedAt > originalUpdatedAt)
+        }
+
+        @Test func setMood_isNoOp_whenSameScore() throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            let entry = JournalService.getOrCreateToday(in: ctx)
+            entry.moodScore = 3
+            entry.updatedAt = Date(timeIntervalSince1970: 1_000_000)
+            try ctx.save()
+            JournalService.setMood(3, in: ctx)
+            #expect(entry.moodScore == 3)
+            #expect(entry.updatedAt == Date(timeIntervalSince1970: 1_000_000))
+        }
+
+        @Test func setMood_acceptsBoundaryValues() throws {
+            let container = try TestContainer.make()
+            let ctx = container.mainContext
+            JournalService.setMood(1, in: ctx)
+            #expect(JournalService.entryForToday(in: ctx)?.moodScore == 1)
+            JournalService.setMood(5, in: ctx)
+            #expect(JournalService.entryForToday(in: ctx)?.moodScore == 5)
+        }
     }
 }
