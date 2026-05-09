@@ -58,4 +58,19 @@ enum InsightsService {
         if dailyRates.isEmpty { return nil }
         return dailyRates.reduce(0, +) / Double(dailyRates.count)
     }
+
+    // MARK: — moodRate
+
+    /// Среднее настроение за окно, нормированное в [0...1].
+    /// rate = (avg − 1) / 4, где avg = среднее JournalEntry.moodScore.
+    /// nil если 0 записей.
+    static func moodRate(today: Date, in ctx: ModelContext) -> Double? {
+        let (start, end) = window(today: today)
+        let predicate = #Predicate<JournalEntry> { $0.date >= start && $0.date <= end }
+        guard let entries = try? ctx.fetch(FetchDescriptor<JournalEntry>(predicate: predicate)),
+              !entries.isEmpty else { return nil }
+        let sum = entries.reduce(0) { $0 + $1.moodScore }
+        let avg = Double(sum) / Double(entries.count)
+        return (avg - 1.0) / 4.0
+    }
 }

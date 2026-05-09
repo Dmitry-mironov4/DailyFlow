@@ -145,5 +145,51 @@ struct InsightsServiceTests {
         let rate = InsightsService.habitsRate(today: Self.today, in: ctx)
         #expect(abs((rate ?? -1) - 1.0) < 0.0001)
     }
+
+    // MARK: — moodRate
+
+    @Test func moodRate_returnsNil_whenNoEntries() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        #expect(InsightsService.moodRate(today: Self.today, in: ctx) == nil)
+    }
+
+    @Test func moodRate_normalizesToRate() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        // [5, 5, 5] → avg = 5.0 → rate = (5 − 1) / 4 = 1.0
+        for i in 0..<3 {
+            ctx.insert(JournalEntry(date: Self.day(-i), moodScore: 5))
+        }
+        try ctx.save()
+        #expect(abs((InsightsService.moodRate(today: Self.today, in: ctx) ?? -1) - 1.0) < 0.0001)
+
+        // Очистим и проверим [3] → 0.5
+        for entry in (try? ctx.fetch(FetchDescriptor<JournalEntry>())) ?? [] {
+            ctx.delete(entry)
+        }
+        try ctx.save()
+        ctx.insert(JournalEntry(date: Self.today, moodScore: 3))
+        try ctx.save()
+        #expect(abs((InsightsService.moodRate(today: Self.today, in: ctx) ?? -1) - 0.5) < 0.0001)
+
+        // Очистим и проверим [1, 1] → 0.0
+        for entry in (try? ctx.fetch(FetchDescriptor<JournalEntry>())) ?? [] {
+            ctx.delete(entry)
+        }
+        try ctx.save()
+        ctx.insert(JournalEntry(date: Self.day(-1), moodScore: 1))
+        ctx.insert(JournalEntry(date: Self.day(0), moodScore: 1))
+        try ctx.save()
+        #expect(abs((InsightsService.moodRate(today: Self.today, in: ctx) ?? -1) - 0.0) < 0.0001)
+    }
+
+    @Test func moodRate_excludesEntriesOutsideWindow() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        ctx.insert(JournalEntry(date: Self.day(-7), moodScore: 5))   // вне окна
+        try ctx.save()
+        #expect(InsightsService.moodRate(today: Self.today, in: ctx) == nil)
+    }
 }
 }
