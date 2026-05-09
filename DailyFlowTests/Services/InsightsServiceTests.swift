@@ -268,5 +268,34 @@ struct InsightsServiceTests {
         #expect(series[6].score == 5)   // index 6 == today
         #expect(series[0].score == nil) // day(-6) — нет записи
     }
+
+    // MARK: — uniqueDataDays
+
+    @Test func uniqueDataDays_zero_whenNoData() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        #expect(InsightsService.uniqueDataDays(today: Self.today, in: ctx) == 0)
+    }
+
+    @Test func uniqueDataDays_countsAcrossAllEntities() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        // Task сегодня + Habit log вчера + Journal сегодня → 2 уникальных дня.
+        let h = Habit(name: "H", colorHex: "2DD4A0", sortOrder: 0)
+        ctx.insert(h)
+        ctx.insert(DailyTask(title: "T", date: Self.today))
+        ctx.insert(HabitLog(date: Self.day(-1), habit: h))
+        ctx.insert(JournalEntry(date: Self.today, moodScore: 4))
+        try ctx.save()
+        #expect(InsightsService.uniqueDataDays(today: Self.today, in: ctx) == 2)
+    }
+
+    @Test func uniqueDataDays_excludesOutsideWindow() throws {
+        let container = try TestContainer.make()
+        let ctx = container.mainContext
+        ctx.insert(DailyTask(title: "Old", date: Self.day(-7)))
+        try ctx.save()
+        #expect(InsightsService.uniqueDataDays(today: Self.today, in: ctx) == 0)
+    }
 }
 }

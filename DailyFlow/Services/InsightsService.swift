@@ -115,4 +115,28 @@ enum InsightsService {
         }
         return result
     }
+
+    // MARK: — uniqueDataDays
+
+    /// Количество уникальных дней в окне с хотя бы одной записью
+    /// в DailyTask, HabitLog или JournalEntry.
+    static func uniqueDataDays(today: Date, in ctx: ModelContext) -> Int {
+        let (start, end) = window(today: today)
+        var dates = Set<Date>()
+
+        let taskPred = #Predicate<DailyTask> { $0.date >= start && $0.date <= end }
+        let logPred = #Predicate<HabitLog> { $0.date >= start && $0.date <= end }
+        let entryPred = #Predicate<JournalEntry> { $0.date >= start && $0.date <= end }
+
+        if let tasks = try? ctx.fetch(FetchDescriptor<DailyTask>(predicate: taskPred)) {
+            dates.formUnion(tasks.map(\.date))
+        }
+        if let logs = try? ctx.fetch(FetchDescriptor<HabitLog>(predicate: logPred)) {
+            dates.formUnion(logs.map(\.date))
+        }
+        if let entries = try? ctx.fetch(FetchDescriptor<JournalEntry>(predicate: entryPred)) {
+            dates.formUnion(entries.map(\.date))
+        }
+        return dates.count
+    }
 }
