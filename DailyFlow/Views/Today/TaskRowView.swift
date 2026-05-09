@@ -12,7 +12,7 @@ struct CheckboxView: View {
                     .background(
                         Circle().fill(isCompleted ? Color.accentTeal : Color.clear)
                     )
-                    .frame(width: 20, height: 20)
+                    .frame(width: 15, height: 15)
                 if isCompleted {
                     Image(systemName: "checkmark")
                         .font(.system(size: 10, weight: .bold))

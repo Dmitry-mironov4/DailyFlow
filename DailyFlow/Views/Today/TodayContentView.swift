@@ -3,6 +3,7 @@ import SwiftUI
 
 struct TodayContentView: View {
     @Environment(\.modelContext) private var ctx
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var todayTasks: [DailyTask]
     @Query private var pendingFromPast: [DailyTask]
 
@@ -93,6 +94,10 @@ struct TodayContentView: View {
         }
         .background(Color.bgPrimary)
         .scrollDismissesKeyboard(.interactively)
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .background, editingTaskId != nil else { return }
+            editingTaskId = nil
+        }
     }
 
     private var headerView: some View {
