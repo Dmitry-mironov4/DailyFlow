@@ -49,8 +49,7 @@ struct TaskRowView: View {
             if isEditing {
                 TextField("", text: $editBuffer)
                     .focused($fieldFocused)
-                    .font(.system(size: 13))
-                    .foregroundStyle(Color.textPrimary)
+                    .dfBody()
                     .submitLabel(.done)
                     .onSubmit { onFinishEdit(editBuffer) }
                     .onAppear {
@@ -59,7 +58,7 @@ struct TaskRowView: View {
                     }
             } else {
                 Text(task.title)
-                    .font(.system(size: 13))
+                    .dfBody()
                     .foregroundStyle(task.isCompleted ? Color.textSecondary : Color.textPrimary)
                     .strikethrough(task.isCompleted)
                     .opacity(task.isCompleted ? 0.5 : 1)
@@ -69,7 +68,7 @@ struct TaskRowView: View {
 
             Spacer()
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 6)
         .contentShape(.rect)
         .contextMenu {
             Button {

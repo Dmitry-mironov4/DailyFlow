@@ -7,12 +7,12 @@ extension View {
     }
 
     func dfBody() -> some View {
-        font(.system(size: 13, weight: .regular))
+        font(.system(size: 15, weight: .regular))
             .foregroundStyle(Color.textPrimary)
     }
 
     func dfCaption() -> some View {
-        font(.system(size: 10, weight: .regular))
+        font(.system(size: 11, weight: .regular))
             .tracking(0.5)
             .textCase(.uppercase)
             .foregroundStyle(Color.textGhost)
@@ -25,7 +25,7 @@ extension View {
     }
 
     func dfLabel() -> some View {
-        font(.system(size: 11, weight: .regular))
+        font(.system(size: 13, weight: .regular))
             .foregroundStyle(Color.textSecondary)
     }
 
