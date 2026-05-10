@@ -23,7 +23,7 @@ private struct MoodTile: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 12)
-                .fill(isSelected ? Color.accentPurple : Color.bgCard)
+                .fill(isSelected ? Color.accentTeal : Color.bgCard)
             Text("\(score)")
                 .font(.system(size: 21, weight: .medium))
                 .foregroundStyle(isSelected ? Color.textPrimary : Color.textSecondary)

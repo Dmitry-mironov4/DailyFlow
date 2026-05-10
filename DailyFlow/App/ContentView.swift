@@ -33,11 +33,11 @@ struct ContentView: View {
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(Color.bgPrimary)
         let ghost = UIColor(Color.textGhost)
-        let primary = UIColor(Color.textPrimary)
         appearance.stackedLayoutAppearance.normal.iconColor = ghost
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: ghost]
-        appearance.stackedLayoutAppearance.selected.iconColor = primary
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: primary]
+        let teal = UIColor(Color.accentTeal)
+        appearance.stackedLayoutAppearance.selected.iconColor = teal
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: teal]
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
     }
