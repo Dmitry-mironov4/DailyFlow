@@ -28,12 +28,6 @@ struct JournalView: View {
         .padding(.top, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.bgPrimary)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Готово") { dismissKeyboard() }
-            }
-        }
         .contentShape(Rectangle())
         .onTapGesture { dismissKeyboard() }
     }
@@ -42,6 +36,11 @@ struct JournalView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(dateCaption)
                 .dfCaption()
+            if let entry = entries.first {
+                Text(timeCaption(for: entry.createdAt))
+                    .dfLabel()
+                    .foregroundStyle(Color.textGhost)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -51,6 +50,17 @@ struct JournalView: View {
         fmt.locale = Locale(identifier: "ru_RU")
         fmt.dateFormat = "EEEE, d MMMM"
         return fmt.string(from: .now).uppercased()
+    }
+
+    private func timeCaption(for date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ru_RU")
+        if Calendar.current.isDateInToday(date) {
+            fmt.dateFormat = "'Сегодня, 'HH:mm"
+        } else {
+            fmt.dateFormat = "d MMM, HH:mm"
+        }
+        return fmt.string(from: date)
     }
 
     private func dismissKeyboard() {

@@ -41,6 +41,12 @@ struct JournalEditorView: View {
                 await MainActor.run { onTextChange(new) }
             }
         }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Готово") { focused = false }
+            }
+        }
         .onDisappear {
             saveTask?.cancel()
             onTextChange(text)
