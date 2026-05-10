@@ -70,7 +70,7 @@ struct TodayContentView: View {
                 Text("ЗАДАЧИ — \(completedCount)/\(totalCount)")
                     .dfCaption()
 
-                LazyVStack(spacing: 0) {
+                VStack(spacing: 0) {
                     ForEach(regular) { task in
                         TaskRowView(
                             task: task,
@@ -83,6 +83,7 @@ struct TodayContentView: View {
                         )
                     }
                 }
+                .dfCard()
 
                 AddTaskBarView(
                     text: $addBarText,
