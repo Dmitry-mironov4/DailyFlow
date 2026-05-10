@@ -9,7 +9,21 @@ struct JournalEditorView: View {
     @State private var saveTask: Task<Void, Never>?
     @FocusState private var focused: Bool
 
+    private var lastEditCaption: String? {
+        guard let updatedAt = entry?.updatedAt, !text.isEmpty else { return nil }
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ru_RU")
+        fmt.dateFormat = "HH:mm"
+        return "Последняя правка: \(fmt.string(from: updatedAt))"
+    }
+
     var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+        if let caption = lastEditCaption {
+            Text(caption)
+                .dfCaption()
+                .padding(.bottom, 2)
+        }
         ZStack(alignment: .topLeading) {
             if text.isEmpty {
                 Text("Что сегодня было?")
@@ -29,6 +43,7 @@ struct JournalEditorView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } // VStack
         .onAppear { text = entry?.text ?? "" }
         .onChange(of: entry?.text ?? "") { _, new in
             if new != text { text = new }
