@@ -67,23 +67,27 @@ struct TodayContentView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
-                Text("ЗАДАЧИ — \(completedCount)/\(totalCount)")
-                    .dfCaption()
-
-                VStack(spacing: 0) {
-                    ForEach(regular) { task in
-                        TaskRowView(
-                            task: task,
-                            isEditing: editingTaskId == task.id,
-                            onToggle: { TaskService.toggleCompletion(task, in: ctx) },
-                            onStartEdit: { editingTaskId = task.id },
-                            onFinishEdit: { commitEdit(task, $0) },
-                            onSetFocus: { try? TaskService.setFocus(task, in: ctx) },
-                            onDelete: { TaskService.delete(task, in: ctx) }
-                        )
-                    }
+                if !todayTasks.isEmpty {
+                    Text("ЗАДАЧИ — \(completedCount)/\(totalCount)")
+                        .dfCaption()
                 }
-                .dfCard()
+
+                if !regular.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(regular) { task in
+                            TaskRowView(
+                                task: task,
+                                isEditing: editingTaskId == task.id,
+                                onToggle: { TaskService.toggleCompletion(task, in: ctx) },
+                                onStartEdit: { editingTaskId = task.id },
+                                onFinishEdit: { commitEdit(task, $0) },
+                                onSetFocus: { try? TaskService.setFocus(task, in: ctx) },
+                                onDelete: { TaskService.delete(task, in: ctx) }
+                            )
+                        }
+                    }
+                    .dfCard()
+                }
 
                 AddTaskBarView(
                     text: $addBarText,

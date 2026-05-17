@@ -40,10 +40,9 @@ struct HabitCardView: View {
         )
         .overlay(alignment: .leading) {
             Rectangle()
-                .fill(accentColor)
+                .fill(isDoneToday ? accentColor : accentColor.opacity(0.22))
                 .frame(width: 3)
                 .padding(.vertical, 4)
-                .opacity(isDoneToday ? 1 : 0)
                 .animation(.easeInOut(duration: 0.2), value: isDoneToday)
         }
         .animation(.easeInOut(duration: 0.2), value: isDoneToday)

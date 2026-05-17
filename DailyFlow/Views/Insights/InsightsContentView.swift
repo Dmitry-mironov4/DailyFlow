@@ -19,14 +19,9 @@ struct InsightsContentView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
 
-                if uniqueDataDays < 3 {
-                    EmptyInsightsView()
-                        .frame(minHeight: 400)
-                } else {
-                    metricsRow
-                    streaksSection
-                    moodSection
-                }
+                metricsRow
+                streaksSection
+                moodSection
             }
             .padding(.bottom, 16)
         }
