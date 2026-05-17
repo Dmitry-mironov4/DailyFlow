@@ -21,6 +21,7 @@ struct DailyFlowApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .task { await CalendarService.requestAccess() }
         }
         .modelContainer(container)
     }
