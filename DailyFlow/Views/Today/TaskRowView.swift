@@ -57,13 +57,21 @@ struct TaskRowView: View {
                         fieldFocused = true
                     }
             } else {
-                Text(task.title)
-                    .dfBody()
-                    .foregroundStyle(task.isCompleted ? Color.textSecondary : Color.textPrimary)
-                    .strikethrough(task.isCompleted)
-                    .opacity(task.isCompleted ? 0.5 : 1)
-                    .lineLimit(2)
-                    .animation(.easeInOut(duration: 0.15), value: task.isCompleted)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(task.title)
+                        .dfBody()
+                        .foregroundStyle(task.isCompleted ? Color.textSecondary : Color.textPrimary)
+                        .strikethrough(task.isCompleted)
+                        .opacity(task.isCompleted ? 0.5 : 1)
+                        .lineLimit(2)
+                        .animation(.easeInOut(duration: 0.15), value: task.isCompleted)
+
+                    if let time = task.scheduledTime {
+                        Text(time, format: .dateTime.hour().minute())
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color.textSecondary)
+                    }
+                }
             }
 
             Spacer()
