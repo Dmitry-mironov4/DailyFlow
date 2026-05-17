@@ -1,15 +1,15 @@
 import SwiftUI
 
 extension Color {
-    static let bgPrimary = Color(hex: 0x0D0D0D)
-    static let bgCard = Color(hex: 0x1A1A1A)
-    static let bgPixelInactive = Color(hex: 0x333333)
-    static let accentTeal = Color(hex: 0x2DD4A0)
-    static let accentAmber = Color(hex: 0xF0A23B)
-    static let accentPurple = Color(hex: 0x9B8AE8)
-    static let textPrimary = Color(hex: 0xF2F2F2)
-    static let textSecondary = Color(hex: 0x888888)
-    static let textGhost = Color(hex: 0x666666)
+    static let bgPrimary       = Color(hex: 0x0D0A05)  // тёмный шоколад
+    static let bgCard          = Color(hex: 0x1C1409)  // тёмная карамель
+    static let bgPixelInactive = Color(hex: 0x362A14)  // поджаренная карамель
+    static let accentTeal      = Color(hex: 0xD4882A)  // жидкая карамель — главный акцент
+    static let accentAmber     = Color(hex: 0xE8C46A)  // золотистая карамель
+    static let accentPurple    = Color(hex: 0xB8622A)  // корица, глубокий тон
+    static let textPrimary     = Color(hex: 0xF0E8D8)  // тёплый кремовый белый
+    static let textSecondary   = Color(hex: 0x8A7860)  // тёплый серо-коричневый
+    static let textGhost       = Color(hex: 0x5E4E38)  // тёмная карамель-тень
 
     init(hex: UInt32) {
         let red = Double((hex >> 16) & 0xFF) / 255
