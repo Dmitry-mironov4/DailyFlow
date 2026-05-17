@@ -10,8 +10,10 @@ final class DailyTask {
     var date: Date
     var createdAt: Date
     var completedAt: Date?
+    var scheduledTime: Date?
+    var calendarEventID: String?
 
-    init(title: String, date: Date, isFocus: Bool = false) {
+    init(title: String, date: Date, isFocus: Bool = false, scheduledTime: Date? = nil) {
         id = UUID()
         self.title = title
         self.isFocus = isFocus
@@ -19,5 +21,7 @@ final class DailyTask {
         self.date = Calendar.current.startOfDay(for: date)
         createdAt = .now
         completedAt = nil
+        self.scheduledTime = scheduledTime
+        calendarEventID = nil
     }
 }
