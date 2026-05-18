@@ -99,8 +99,8 @@ struct TodayContentView: View {
                     .dfCard()
                 }
 
-                AddTaskBarView(text: $addBarText) { title, priority in
-                    TaskService.add(title: title, on: dateAnchor, priority: priority, in: ctx)
+                AddTaskBarView(text: $addBarText) { title, priority, time in
+                    TaskService.add(title: title, scheduledTime: time, on: dateAnchor, priority: priority, in: ctx)
                 }
             }
             .padding(.horizontal, 16)

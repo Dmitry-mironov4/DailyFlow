@@ -23,6 +23,7 @@ struct DailyFlowApp: App {
         WindowGroup {
             ContentView()
                 .onAppear { seedDefaultLists() }
+                .task { _ = await CalendarService.requestAccess() }
         }
         .modelContainer(container)
     }

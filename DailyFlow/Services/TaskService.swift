@@ -5,6 +5,7 @@ enum TaskService {
     @discardableResult
     static func add(
         title: String,
+        scheduledTime: Date? = nil,
         isFocus: Bool = false,
         on date: Date,
         priority: Int = 0,
@@ -13,9 +14,10 @@ enum TaskService {
     ) -> DailyTask? {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        let task = DailyTask(title: trimmed, date: date, isFocus: isFocus, priority: priority)
+        let task = DailyTask(title: trimmed, date: date, isFocus: isFocus, priority: priority, scheduledTime: scheduledTime)
         task.list = list
         ctx.insert(task)
+        task.calendarEventID = CalendarService.sync(task)
         return task
     }
 
@@ -55,6 +57,9 @@ enum TaskService {
     }
 
     static func delete(_ task: DailyTask, in ctx: ModelContext) {
+        if let eventID = task.calendarEventID {
+            CalendarService.remove(eventID: eventID)
+        }
         ctx.delete(task)
         try? ctx.save()
     }
@@ -63,6 +68,21 @@ enum TaskService {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         task.title = trimmed
+        task.calendarEventID = CalendarService.sync(task)
+        try? ctx.save()
+    }
+
+    static func setScheduledTime(_ task: DailyTask, time: Date?, in ctx: ModelContext) {
+        if let time {
+            task.scheduledTime = time
+            task.calendarEventID = CalendarService.sync(task)
+        } else {
+            if let eventID = task.calendarEventID {
+                CalendarService.remove(eventID: eventID)
+                task.calendarEventID = nil
+            }
+            task.scheduledTime = nil
+        }
         try? ctx.save()
     }
 
