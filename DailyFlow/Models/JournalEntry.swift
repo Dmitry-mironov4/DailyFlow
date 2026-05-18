@@ -7,7 +7,7 @@ final class JournalEntry {
     var date: Date
     var moodScore: Int
     var text: String
-    var activities: [String]
+    var activities: [String] = []
     var syncedToObsidian: Bool
     var createdAt: Date
     var updatedAt: Date

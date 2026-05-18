@@ -10,7 +10,7 @@ final class DailyTask {
     var date: Date
     var createdAt: Date
     var completedAt: Date?
-    var priority: Int
+    var priority: Int = 0
     var list: TaskList?
     var scheduledTime: Date?
     var calendarEventID: String?
