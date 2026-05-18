@@ -1,22 +1,25 @@
 import SwiftUI
 
 extension Color {
-    static let bgPrimary       = Color(hex: 0x0D0A05)  // тёмный шоколад
-    static let bgCard          = Color(hex: 0x1C1409)  // тёмная карамель
-    static let bgPixelInactive = Color(hex: 0x362A14)  // поджаренная карамель
-    static let accentTeal      = Color(hex: 0xD4882A)  // жидкая карамель — главный акцент
-    static let accentAmber     = Color(hex: 0xE8C46A)  // золотистая карамель
-    static let accentPurple    = Color(hex: 0xB8622A)  // корица, глубокий тон
-    static let textPrimary     = Color(hex: 0xF0E8D8)  // тёплый кремовый белый
-    static let textSecondary   = Color(hex: 0x8A7860)  // тёплый серо-коричневый
-    static let textGhost       = Color(hex: 0x5E4E38)  // тёмная карамель-тень
+    // Backgrounds
+    static let bgPrimary = Color(hex: 0x111214)
+    static let bgCard = Color(hex: 0x1A1C1F)
+    static let bgElevated = Color(hex: 0x212427)
 
-    // Палитра привычек
-    static let habitMint  = Color(hex: 0x3ECFB2)
-    static let habitCoral = Color(hex: 0xFF6B6B)
-    static let habitSky   = Color(hex: 0x5BA4F5)
-    static let habitOlive = Color(hex: 0x8BBF4D)
-    static let habitRose  = Color(hex: 0xE8789A)
+    // Separators
+    static let separator = Color(hex: 0x2C2F33)
+    static let borderCard = Color.white.opacity(0.06)
+
+    // Accents
+    static let accentWhite = Color(hex: 0xF5F5F5)
+    static let accentDone = Color(hex: 0x4ADE80)
+    static let accentDestructive = Color(hex: 0xF87171)
+
+    // Text
+    static let textPrimary = Color(hex: 0xDCDCDC)
+    static let textSecondary = Color(hex: 0x808080)
+    static let textGhost = Color(hex: 0x464646)
+    static let textInverted = Color(hex: 0x111214)
 
     init(hex: UInt32) {
         let red = Double((hex >> 16) & 0xFF) / 255

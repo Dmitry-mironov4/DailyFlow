@@ -19,13 +19,13 @@ struct FocusCardView: View {
                     .font(.system(size: 10))
                     .tracking(0.5)
                     .textCase(.uppercase)
-                    .foregroundStyle(Color.accentTeal)
+                    .foregroundStyle(Color.textInverted.opacity(0.5))
 
                 if isEditing {
                     TextField("", text: $editBuffer)
                         .focused($fieldFocused)
                         .font(.system(size: 13))
-                        .foregroundStyle(Color.textPrimary)
+                        .foregroundStyle(Color.textInverted)
                         .submitLabel(.done)
                         .onSubmit { onFinishEdit(editBuffer) }
                         .onAppear {
@@ -36,19 +36,20 @@ struct FocusCardView: View {
                     Text(task.title)
                         .font(.system(size: 13))
                         .foregroundStyle(
-                            task.isCompleted ? Color.textSecondary : Color.textPrimary
+                            task.isCompleted
+                                ? Color.textInverted.opacity(0.4)
+                                : Color.textInverted
                         )
                         .strikethrough(task.isCompleted)
-                        .opacity(task.isCompleted ? 0.5 : 1)
                         .lineLimit(2)
                 }
             }
 
             Spacer()
 
-            CheckboxView(isCompleted: task.isCompleted, onTap: onToggle)
+            FocusCheckboxView(isCompleted: task.isCompleted, onTap: onToggle)
         }
-        .dfAccentCard(color: .accentTeal)
+        .dfAccentCard()
         .animation(.easeInOut(duration: 0.15), value: task.isCompleted)
         .contextMenu {
             Button {
@@ -69,6 +70,38 @@ struct FocusCardView: View {
                 Label("Удалить", systemImage: "trash")
             }
         }
+    }
+}
+
+// MARK: — FocusCheckboxView
+
+private struct FocusCheckboxView: View {
+    let isCompleted: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            ZStack {
+                Circle()
+                    .strokeBorder(
+                        isCompleted ? Color.clear : Color.textInverted.opacity(0.3),
+                        lineWidth: 1.5
+                    )
+                    .background(
+                        Circle().fill(isCompleted ? Color.textInverted.opacity(0.2) : Color.clear)
+                    )
+                    .frame(width: 15, height: 15)
+                if isCompleted {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.textInverted)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .frame(width: 44, height: 44)
+        .contentShape(.circle)
+        .animation(.easeInOut(duration: 0.15), value: isCompleted)
     }
 }
 

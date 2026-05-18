@@ -7,14 +7,12 @@ struct PixelGridView: View {
     var body: some View {
         HStack(spacing: 4) {
             ForEach(lastSevenDays, id: \.self) { date in
+                let isDone = HabitService.isDone(habit, on: date)
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(
-                        HabitService.isDone(habit, on: date)
-                            ? Color(hex: habit.colorHex)
-                            : Color.bgPixelInactive
-                    )
+                    .fill(isDone ? Color.accentWhite.opacity(0.9) : Color.bgElevated)
                     .frame(width: 28, height: 28)
-                    .animation(.easeInOut(duration: 0.15), value: HabitService.isDone(habit, on: date))
+                    .scaleEffect(isDone ? 1.0 : 0.85)
+                    .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isDone)
             }
         }
     }
@@ -28,7 +26,7 @@ struct PixelGridView: View {
 }
 
 #Preview("Без выполнений") {
-    let habit = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
+    let habit = Habit(name: "Медитация", colorHex: "808080", sortOrder: 0)
     return PixelGridView(habit: habit)
         .padding()
         .background(Color.bgCard)
@@ -37,7 +35,7 @@ struct PixelGridView: View {
 
 #Preview("С выполнениями") {
     let container = ModelContainer.preview(.empty)
-    let habit = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 0)
+    let habit = Habit(name: "Спорт", colorHex: "808080", sortOrder: 0)
     container.mainContext.insert(habit)
     let today = Calendar.current.startOfDay(for: .now)
     for i in 0 ..< 5 {

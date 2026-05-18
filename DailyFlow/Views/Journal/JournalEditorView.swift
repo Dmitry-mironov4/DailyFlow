@@ -19,30 +19,31 @@ struct JournalEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-        if let caption = lastEditCaption {
-            Text(caption)
-                .dfCaption()
-                .padding(.bottom, 2)
-        }
-        ZStack(alignment: .topLeading) {
-            if text.isEmpty {
-                Text("Что сегодня было?")
-                    .dfBody()
-                    .foregroundStyle(Color.textGhost)
-                    .padding(.top, 12)
-                    .padding(.leading, 8)
-                    .allowsHitTesting(false)
+            if let caption = lastEditCaption {
+                Text(caption)
+                    .dfCaption()
+                    .padding(.bottom, 2)
             }
-            TextEditor(text: $text)
-                .focused($focused)
-                .scrollContentBackground(.hidden)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 4)
-                .background(Color.bgCard)
-                .dfBody()
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ZStack(alignment: .topLeading) {
+                if text.isEmpty {
+                    Text("Что сегодня было?")
+                        .dfBody()
+                        .foregroundStyle(Color.textGhost)
+                        .padding(.top, 12)
+                        .padding(.leading, 8)
+                        .allowsHitTesting(false)
+                }
+                TextEditor(text: $text)
+                    .focused($focused)
+                    .scrollContentBackground(.hidden)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 4)
+                    .background(Color.bgPrimary)
+                    .dfBody()
+                    .tint(Color.accentWhite)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } // VStack
         .onAppear { text = entry?.text ?? "" }
         .onChange(of: entry?.text ?? "") { _, new in

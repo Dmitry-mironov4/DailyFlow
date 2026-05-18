@@ -1,62 +1,53 @@
 import Foundation
+import OSLog
 import SwiftData
 
+private nonisolated(unsafe) let logger = Logger(subsystem: "com.dmitry.DailyFlow", category: "JournalService")
+
 enum JournalService {
-    /// Возвращает запись за сегодня (по startOfDay) или nil если её нет.
     static func entryForToday(in ctx: ModelContext, now: Date = .now) -> JournalEntry? {
         let target = Calendar.current.startOfDay(for: now)
         let descriptor = FetchDescriptor<JournalEntry>(
             predicate: #Predicate { $0.date == target }
         )
-        return (try? ctx.fetch(descriptor))?.first
+        do { return try ctx.fetch(descriptor).first } catch {
+            logger.error("entryForToday fetch: \(error.localizedDescription)")
+            return nil
+        }
     }
 
-    /// Возвращает существующую запись или создаёт новую с дефолтами и инсертит в контекст.
-    /// Дефолты: moodScore = 3, text = "".
     @discardableResult
     static func getOrCreateToday(in ctx: ModelContext, now: Date = .now) -> JournalEntry {
-        if let existing = entryForToday(in: ctx, now: now) {
-            return existing
-        }
+        if let existing = entryForToday(in: ctx, now: now) { return existing }
         let entry = JournalEntry(date: now)
         ctx.insert(entry)
-        try? ctx.save()
+        do { try ctx.save() } catch { logger.error("getOrCreateToday save: \(error.localizedDescription)") }
         return entry
     }
 
-    /// Устанавливает moodScore.
-    /// Если значение совпадает с текущим — no-op (updatedAt не меняется).
-    /// Если записи нет — создаёт через getOrCreateToday и сразу выставляет.
     static func setMood(_ score: Int, in ctx: ModelContext, now: Date = .now) {
-        precondition((1 ... 5).contains(score), "moodScore must be in 1...5")
+        guard (1 ... 5).contains(score) else { return }
         let entry = getOrCreateToday(in: ctx, now: now)
         guard entry.moodScore != score else { return }
         entry.moodScore = score
         entry.updatedAt = now
-        try? ctx.save()
+        do { try ctx.save() } catch { logger.error("setMood save: \(error.localizedDescription)") }
     }
 
-    /// Обновляет activities у сегодняшней записи.
     static func setActivities(_ activities: [String], in ctx: ModelContext, now: Date = .now) {
         let entry = getOrCreateToday(in: ctx, now: now)
         guard entry.activities != activities else { return }
         entry.activities = activities
         entry.updatedAt = now
-        try? ctx.save()
+        do { try ctx.save() } catch { logger.error("setActivities save: \(error.localizedDescription)") }
     }
 
-    /// Записывает text.
-    /// Если запись отсутствует и text пустой — no-op (не плодим пустые записи).
-    /// Если запись отсутствует и text не пустой — создаёт через getOrCreateToday и пишет text.
-    /// Обновляет updatedAt только если значение реально изменилось.
     static func setText(_ text: String, in ctx: ModelContext, now: Date = .now) {
-        if entryForToday(in: ctx, now: now) == nil, text.isEmpty {
-            return
-        }
+        if entryForToday(in: ctx, now: now) == nil, text.isEmpty { return }
         let entry = getOrCreateToday(in: ctx, now: now)
         guard entry.text != text else { return }
         entry.text = text
         entry.updatedAt = now
-        try? ctx.save()
+        do { try ctx.save() } catch { logger.error("setText save: \(error.localizedDescription)") }
     }
 }

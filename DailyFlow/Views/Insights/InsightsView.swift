@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct InsightsView: View {
     @Environment(\.scenePhase) private var scenePhase

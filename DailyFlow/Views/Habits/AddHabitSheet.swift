@@ -2,99 +2,117 @@ import SwiftUI
 
 struct AddHabitSheet: View {
     let habit: Habit?
-    let onSave: (String, String) -> Void
+    let onSave: (String, String, Date?) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
-    @State private var selectedHex: String
+    @State private var reminderEnabled: Bool
+    @State private var reminderTime: Date
     @FocusState private var isFocused: Bool
 
-    private let colorOptions = [
-        "2DD4A0", "F0A23B", "9B8AE8", "3ECFB2",
-        "FF6B6B", "5BA4F5", "8BBF4D", "E8789A"
-    ]
-
-    init(habit: Habit?, onSave: @escaping (String, String) -> Void) {
+    init(habit: Habit?, onSave: @escaping (String, String, Date?) -> Void) {
         self.habit = habit
         self.onSave = onSave
         _name = State(initialValue: habit?.name ?? "")
-        _selectedHex = State(initialValue: habit?.colorHex ?? "2DD4A0")
+        _reminderEnabled = State(initialValue: habit?.reminderTime != nil)
+        _reminderTime = State(initialValue: habit?.reminderTime ?? defaultReminderTime())
     }
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 32) {
+            VStack(alignment: .leading, spacing: 16) {
                 TextField("Название привычки", text: $name)
                     .dfBody()
                     .focused($isFocused)
                     .submitLabel(.done)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
-                    .background(Color.bgCard, in: .rect(cornerRadius: 12))
+                    .background(Color.bgElevated, in: .rect(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.borderCard, lineWidth: 1)
+                    )
+                    .tint(Color.accentWhite)
 
-                VStack(spacing: 12) {
-                    ForEach([0, 1], id: \.self) { row in
-                        HStack(spacing: 12) {
-                            ForEach(0 ..< 4, id: \.self) { col in
-                                let hex = colorOptions[row * 4 + col]
-                                Button {
-                                    selectedHex = hex
-                                } label: {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color(hex: hex))
-                                            .frame(width: 32, height: 32)
-                                            .opacity(selectedHex == hex ? 1.0 : 0.5)
-                                        if selectedHex == hex {
-                                            Circle()
-                                                .strokeBorder(Color.white, lineWidth: 2)
-                                                .frame(width: 40, height: 40)
-                                        }
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 16)
+                reminderRow
 
                 Spacer()
+
+                Button {
+                    Haptics.tap(.light)
+                    onSave(name, "808080", reminderEnabled ? reminderTime : nil)
+                    dismiss()
+                } label: {
+                    Text(habit == nil ? "Добавить" : "Сохранить")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(Color.textInverted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.accentWhite, in: .rect(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .opacity(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.4 : 1)
             }
+            .padding(.horizontal, 16)
             .padding(.top, 24)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.bgPrimary)
+            .background(Color.bgCard)
             .navigationTitle(habit == nil ? "Новая привычка" : "Изменить")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.bgPrimary, for: .navigationBar)
+            .toolbarBackground(Color.bgCard, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Отмена") { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(habit == nil ? "Добавить" : "Сохранить") {
-                        Haptics.tap(.light)
-                        onSave(name, selectedHex)
-                        dismiss()
-                    }
-                    .foregroundStyle(Color.accentTeal)
-                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
             }
             .onAppear { isFocused = true }
         }
     }
+
+    private var reminderRow: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Toggle(isOn: $reminderEnabled.animation()) {
+                Text("Напоминание")
+                    .dfBody()
+            }
+            .tint(Color.accentWhite)
+
+            if reminderEnabled {
+                DatePicker("Время", selection: $reminderTime, displayedComponents: [.hourAndMinute])
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+                    .tint(Color.accentWhite)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.bgElevated, in: .rect(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.borderCard, lineWidth: 1)
+        )
+        .animation(.easeInOut(duration: 0.2), value: reminderEnabled)
+    }
+}
+
+private func defaultReminderTime() -> Date {
+    var components = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+    components.hour = 9
+    components.minute = 0
+    return Calendar.current.date(from: components) ?? .now
 }
 
 #Preview("Создание") {
-    AddHabitSheet(habit: nil) { _, _ in }
+    AddHabitSheet(habit: nil) { _, _, _ in }
         .preferredColorScheme(.dark)
 }
 
 #Preview("Редактирование") {
     AddHabitSheet(
-        habit: Habit(name: "Медитация", colorHex: "F0A23B", sortOrder: 0)
-    ) { _, _ in }
+        habit: Habit(name: "Медитация", colorHex: "808080", sortOrder: 0)
+    ) { _, _, _ in }
         .preferredColorScheme(.dark)
 }

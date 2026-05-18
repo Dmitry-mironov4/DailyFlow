@@ -6,7 +6,7 @@ struct MonthlyHeatmapView: View {
 
     @Environment(\.modelContext) private var ctx
 
-    // 5 недель = 35 дней. Сетка: столбцы = недели, строки = дни Пн..Вс
+    /// 5 недель = 35 дней. Сетка: столбцы = недели, строки = дни Пн..Вс
     private var grid: [[Date]] {
         let cal = Calendar.current
         let todayStart = cal.startOfDay(for: today)
@@ -69,7 +69,7 @@ struct MonthlyHeatmapView: View {
                 .frame(width: 14, height: 14)
             if isToday {
                 RoundedRectangle(cornerRadius: 3)
-                    .strokeBorder(Color.accentTeal, lineWidth: 1.5)
+                    .strokeBorder(Color.accentWhite, lineWidth: 1.5)
                     .frame(width: 14, height: 14)
             }
         }
@@ -77,10 +77,10 @@ struct MonthlyHeatmapView: View {
 
     private func cellColor(activity: Int) -> Color {
         switch activity {
-        case 0: return Color.bgPixelInactive
-        case 1: return Color.accentTeal.opacity(0.25)
-        case 2, 3: return Color.accentTeal.opacity(0.55)
-        default: return Color.accentTeal
+        case 0: Color.bgElevated
+        case 1: Color.accentWhite.opacity(0.25)
+        case 2, 3: Color.accentWhite.opacity(0.55)
+        default: Color.accentWhite
         }
     }
 

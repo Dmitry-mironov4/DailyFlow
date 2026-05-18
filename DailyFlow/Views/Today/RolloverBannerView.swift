@@ -19,25 +19,31 @@ struct RolloverBannerView: View {
             } label: {
                 Text("Перенести")
                     .font(.system(size: 13))
-                    .foregroundStyle(Color.accentTeal)
+                    .foregroundStyle(Color.accentWhite)
             }
             .buttonStyle(.plain)
 
             Text(" · ")
                 .font(.system(size: 13))
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.separator)
 
             Button {
                 Haptics.tap(.medium)
                 onDiscard()
             } label: {
-                Text("Очистить")
+                Text("Удалить")
                     .font(.system(size: 13))
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.accentDestructive)
             }
             .buttonStyle(.plain)
         }
-        .dfCard()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.bgElevated, in: .rect(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.separator, lineWidth: 1)
+        )
     }
 }
 

@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import SwiftData
 import SwiftUI
 
@@ -32,11 +33,10 @@ struct TodayContentView: View {
 
     private var regular: [DailyTask] {
         let base = todayTasks.filter { !$0.isFocus }
-        let filtered: [DailyTask]
-        if let list = selectedList {
-            filtered = base.filter { $0.list?.id == list.id }
+        let filtered: [DailyTask] = if let list = selectedList {
+            base.filter { $0.list?.id == list.id }
         } else {
-            filtered = base
+            base
         }
         return filtered.sorted {
             if $0.priority != $1.priority { return $0.priority > $1.priority }
@@ -44,8 +44,13 @@ struct TodayContentView: View {
         }
     }
 
-    private var completedCount: Int { todayTasks.filter(\.isCompleted).count }
-    private var totalCount: Int { todayTasks.count }
+    private var completedCount: Int {
+        todayTasks.filter(\.isCompleted).count
+    }
+
+    private var totalCount: Int {
+        todayTasks.count
+    }
 
     var body: some View {
         ScrollView {
@@ -94,6 +99,10 @@ struct TodayContentView: View {
                                 onDelete: { TaskService.delete(task, in: ctx) },
                                 onSetPriority: { TaskService.updatePriority(task, to: $0, in: ctx) }
                             )
+                            if task.id != regular.last?.id {
+                                Divider().background(Color.separator)
+                                    .padding(.leading, 52)
+                            }
                         }
                     }
                     .dfCard()
@@ -112,6 +121,34 @@ struct TodayContentView: View {
             guard phase == .background, editingTaskId != nil else { return }
             editingTaskId = nil
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    exportDay()
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundStyle(Color.textSecondary)
+                }
+            }
+        }
+    }
+
+    private func exportDay() {
+        let habitDescriptor = FetchDescriptor<Habit>()
+        let logDescriptor = FetchDescriptor<HabitLog>()
+        let habits = (try? ctx.fetch(habitDescriptor)) ?? []
+        let logs = (try? ctx.fetch(logDescriptor)) ?? []
+        let entryDescriptor = FetchDescriptor<JournalEntry>(
+            predicate: #Predicate { $0.date == dateAnchor }
+        )
+        let entry = (try? ctx.fetch(entryDescriptor))?.first
+        ObsidianService.exportDay(
+            date: dateAnchor,
+            tasks: todayTasks,
+            habits: habits,
+            logs: logs,
+            entry: entry
+        )
     }
 
     // MARK: — Filter pills
@@ -146,11 +183,15 @@ struct TodayContentView: View {
         .padding(.bottom, 14)
     }
 
-    private var dateCaption: String {
+    private static let dateFormatter: DateFormatter = {
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "ru_RU")
         fmt.dateFormat = "EEEE, d MMMM"
-        return fmt.string(from: dateAnchor).uppercased()
+        return fmt
+    }()
+
+    private var dateCaption: String {
+        Self.dateFormatter.string(from: dateAnchor).uppercased()
     }
 
     private func commitEdit(_ task: DailyTask, _ newTitle: String) {

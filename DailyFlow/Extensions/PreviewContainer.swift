@@ -11,7 +11,7 @@ enum PreviewScenario {
     case threeHabits
     case allHabitsDoneToday
     case longStreak
-    // Инсайты:
+    /// Инсайты:
     case fullWeek
     // Дневник:
     case emptyJournal
@@ -23,12 +23,12 @@ enum PreviewScenario {
 extension ModelContainer {
     // swiftlint:disable cyclomatic_complexity function_body_length
     @MainActor
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
     static func preview(_ scenario: PreviewScenario) -> ModelContainer {
         let schema = Schema([DailyTask.self, Habit.self, HabitLog.self, JournalEntry.self, TaskList.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        // swiftlint:disable:next force_try
-        let container = try! ModelContainer(for: schema, configurations: [config])
+        guard let container = try? ModelContainer(for: schema, configurations: [config]) else {
+            fatalError("Preview container init failed")
+        }
         let ctx = container.mainContext
         let today = Calendar.current.startOfDay(for: .now)
 
@@ -58,9 +58,9 @@ extension ModelContainer {
             ctx.insert(DailyTask(title: "Задача в режиме редактирования", date: today))
 
         case .threeHabits:
-            let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
-            let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
-            let h3 = Habit(name: "Чтение", colorHex: "9B8AE8", sortOrder: 2)
+            let h1 = Habit(name: "Медитация", colorHex: "808080", sortOrder: 0)
+            let h2 = Habit(name: "Спорт", colorHex: "808080", sortOrder: 1)
+            let h3 = Habit(name: "Чтение", colorHex: "808080", sortOrder: 2)
             [h1, h2, h3].forEach { ctx.insert($0) }
             // h1 выполнена сегодня
             ctx.insert(HabitLog(date: today, habit: h1))
@@ -69,15 +69,15 @@ extension ModelContainer {
             ctx.insert(HabitLog(date: yesterday, habit: h2))
 
         case .allHabitsDoneToday:
-            let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
-            let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
-            let h3 = Habit(name: "Чтение", colorHex: "9B8AE8", sortOrder: 2)
+            let h1 = Habit(name: "Медитация", colorHex: "808080", sortOrder: 0)
+            let h2 = Habit(name: "Спорт", colorHex: "808080", sortOrder: 1)
+            let h3 = Habit(name: "Чтение", colorHex: "808080", sortOrder: 2)
             [h1, h2, h3].forEach { ctx.insert($0) }
             [h1, h2, h3].forEach { ctx.insert(HabitLog(date: today, habit: $0)) }
 
         case .longStreak:
-            let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
-            let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
+            let h1 = Habit(name: "Медитация", colorHex: "808080", sortOrder: 0)
+            let h2 = Habit(name: "Спорт", colorHex: "808080", sortOrder: 1)
             ctx.insert(h1)
             ctx.insert(h2)
             // h1: стрик 7 дней подряд включая сегодня
@@ -93,6 +93,7 @@ extension ModelContainer {
 
         case .fullWeek:
             seedFullWeek(in: ctx, today: today)
+
         case .emptyJournal:
             break
 
@@ -113,16 +114,17 @@ extension ModelContainer {
 
         return container
     }
+
     // swiftlint:enable cyclomatic_complexity function_body_length
 
     @MainActor
     private static func seedFullWeek(in ctx: ModelContext, today: Date) {
         let cal = Calendar.current
         // 7 дней задач: ~70% выполнения.
-        for offset in 0..<7 {
+        for offset in 0 ..< 7 {
             let day = cal.date(byAdding: .day, value: -offset, to: today)!
             let count = offset % 2 == 0 ? 3 : 2
-            for index in 0..<count {
+            for index in 0 ..< count {
                 let task = DailyTask(title: "Задача \(index + 1)", date: day)
                 if (offset + index) % 3 != 0 {
                     task.isCompleted = true
@@ -132,17 +134,17 @@ extension ModelContainer {
             }
         }
         // 3 привычки старого возраста, разные стрики.
-        let h1 = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
-        let h2 = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 1)
-        let h3 = Habit(name: "Чтение", colorHex: "9B8AE8", sortOrder: 2)
+        let h1 = Habit(name: "Медитация", colorHex: "808080", sortOrder: 0)
+        let h2 = Habit(name: "Спорт", colorHex: "808080", sortOrder: 1)
+        let h3 = Habit(name: "Чтение", colorHex: "808080", sortOrder: 2)
         for habit in [h1, h2, h3] {
             habit.createdAt = cal.date(byAdding: .day, value: -30, to: today)!
             ctx.insert(habit)
         }
-        for offset in 0..<7 {
+        for offset in 0 ..< 7 {
             ctx.insert(HabitLog(date: cal.date(byAdding: .day, value: -offset, to: today)!, habit: h1))
         }
-        for offset in 0..<3 {
+        for offset in 0 ..< 3 {
             ctx.insert(HabitLog(date: cal.date(byAdding: .day, value: -offset, to: today)!, habit: h2))
         }
         ctx.insert(HabitLog(date: today, habit: h3))

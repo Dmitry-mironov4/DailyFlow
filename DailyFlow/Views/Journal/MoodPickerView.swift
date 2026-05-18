@@ -12,7 +12,7 @@ struct MoodPickerView: View {
                     .onTapGesture { onSelect(score) }
             }
         }
-        .frame(height: 96)
+        .frame(height: 80)
     }
 }
 
@@ -20,57 +20,37 @@ private struct MoodTile: View {
     let score: Int
     let isSelected: Bool
 
-    private var emoji: String {
-        switch score {
-        case 1: return "😔"
-        case 2: return "😕"
-        case 3: return "😐"
-        case 4: return "🙂"
-        default: return "😄"
-        }
-    }
-
     private var label: String {
         switch score {
-        case 1: return "Тяжело"
-        case 2: return "Грустно"
-        case 3: return "Нейтрально"
-        case 4: return "Хорошо"
-        default: return "Отлично"
-        }
-    }
-
-    private var moodColor: Color {
-        switch score {
-        case 1: return Color(hex: 0xFF6B6B)
-        case 2: return Color(hex: 0xF0A23B)
-        case 3: return Color(hex: 0xF5C842)
-        case 4: return Color(hex: 0x7ED3A0)
-        default: return Color.accentTeal
+        case 1: "Плохо"
+        case 2: "Так себе"
+        case 3: "Норм"
+        case 4: "Хорошо"
+        default: "Отлично"
         }
     }
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             ZStack {
-                Circle()
-                    .fill(isSelected ? moodColor.opacity(0.2) : Color.bgCard)
-                Circle()
-                    .strokeBorder(
-                        isSelected ? moodColor : Color.clear,
-                        lineWidth: 2
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isSelected ? Color.bgElevated : Color.bgCard)
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(
+                        isSelected ? Color.accentWhite : Color.separator,
+                        lineWidth: isSelected ? 1.5 : 1
                     )
-                Text(emoji)
-                    .font(.system(size: isSelected ? 30 : 24))
-                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
+                Text("\(score)")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(isSelected ? Color.textPrimary : Color.textGhost)
             }
-            .frame(maxWidth: .infinity)
-            .scaleEffect(isSelected ? 1.12 : 1.0)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .scaleEffect(isSelected ? 1.04 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
 
             Text(label)
-                .font(.system(size: 10))
-                .foregroundStyle(isSelected ? moodColor : Color.textGhost)
+                .font(.system(size: 9))
+                .foregroundStyle(isSelected ? Color.textPrimary : Color.textGhost)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }

@@ -22,6 +22,10 @@ extension View {
         padding(.horizontal, 16)
             .padding(.vertical, 14)
             .background(Color.bgCard, in: .rect(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.borderCard, lineWidth: 1)
+            )
     }
 
     func dfLabel() -> some View {
@@ -29,16 +33,10 @@ extension View {
             .foregroundStyle(Color.textSecondary)
     }
 
-    func dfAccentCard(color: Color) -> some View {
+    func dfAccentCard() -> some View {
         padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(color.opacity(0.08), in: .rect(cornerRadius: 12))
-            .overlay(alignment: .leading) {
-                Rectangle()
-                    .fill(color)
-                    .frame(width: 3)
-                    .padding(.vertical, 4)
-            }
+            .background(Color.accentWhite, in: .rect(cornerRadius: 12))
     }
 
     func dfStat() -> some View {

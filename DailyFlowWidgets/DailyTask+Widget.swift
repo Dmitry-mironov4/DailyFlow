@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-// Зеркало модели из основного таргета — необходимо для виджет-расширения
+/// Зеркало модели из основного таргета — необходимо для виджет-расширения
 @Model
 final class DailyTask {
     var id: UUID

@@ -5,7 +5,7 @@ struct HabitHeatmapView: View {
     let habit: Habit
     let today: Date
 
-    // 16 недель = 112 дней. Столбцы = недели (0..15), строки = дни (0=Пн..6=Вс)
+    /// 16 недель = 112 дней. Столбцы = недели (0..15), строки = дни (0=Пн..6=Вс)
     private var grid: [[Date?]] {
         let cal = Calendar.current
         let todayStart = cal.startOfDay(for: today)
@@ -24,8 +24,8 @@ struct HabitHeatmapView: View {
         for _ in 0 ..< 16 {
             var col: [Date?] = []
             for _ in 0 ..< 7 {
-                let d = cal.startOfDay(for: cursor)
-                col.append(d > todayStart ? nil : d)
+                let day = cal.startOfDay(for: cursor)
+                col.append(day > todayStart ? nil : day)
                 cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
             }
             columns.append(col)
@@ -33,7 +33,9 @@ struct HabitHeatmapView: View {
         return columns
     }
 
-    private var accentColor: Color { Color(hex: habit.colorHex) }
+    private var accentColor: Color {
+        Color.accentWhite
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 3) {
@@ -55,7 +57,7 @@ struct HabitHeatmapView: View {
             let isToday = Calendar.current.isDateInToday(date)
             ZStack {
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(isDone ? accentColor : Color.bgPixelInactive)
+                    .fill(isDone ? accentColor : Color.bgElevated)
                     .frame(width: size, height: size)
                 if isToday {
                     RoundedRectangle(cornerRadius: 2)

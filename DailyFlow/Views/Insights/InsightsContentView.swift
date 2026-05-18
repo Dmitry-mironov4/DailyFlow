@@ -27,6 +27,7 @@ struct InsightsContentView: View {
                 metricsRow
                 streaksSection
                 moodSection
+                correlationsSection
                 heatmapSection
             }
             .padding(.bottom, 16)
@@ -83,6 +84,19 @@ struct InsightsContentView: View {
         return InsightsService.moodSeries(today: today, in: ctx)
     }
 
+    private var habitCorrelations: [(habit: Habit, delta: Double)] {
+        _ = dataChangeToken
+        let window = moodSeries.map(\.date)
+        let allLogs = (try? ctx.fetch(FetchDescriptor<HabitLog>())) ?? []
+        let moodEntries = (try? ctx.fetch(FetchDescriptor<JournalEntry>())) ?? []
+        return InsightsService.habitMoodCorrelations(
+            habits: allHabits,
+            logs: allLogs,
+            entries: moodEntries,
+            in: window
+        )
+    }
+
     // MARK: — Секции
 
     private var metricsRow: some View {
@@ -129,6 +143,34 @@ struct InsightsContentView: View {
             MonthlyHeatmapView(today: today)
                 .dfCard()
                 .padding(.horizontal, 16)
+        }
+    }
+
+    @ViewBuilder
+    private var correlationsSection: some View {
+        let correlations = habitCorrelations
+        if !correlations.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("ЧТО ПОМОГАЕТ").dfCaption()
+                    .padding(.horizontal, 16)
+                VStack(spacing: 0) {
+                    ForEach(Array(correlations.enumerated()), id: \.offset) { idx, item in
+                        HStack(spacing: 12) {
+                            Text(item.habit.name).dfBody()
+                            Spacer()
+                            Text("+\(String(format: "%.1f", item.delta))")
+                                .font(.system(size: 13))
+                                .foregroundStyle(Color.textSecondary)
+                        }
+                        .padding(.vertical, 6)
+                        if idx < correlations.count - 1 {
+                            Divider().background(Color.separator)
+                        }
+                    }
+                }
+                .dfCard()
+                .padding(.horizontal, 16)
+            }
         }
     }
 }

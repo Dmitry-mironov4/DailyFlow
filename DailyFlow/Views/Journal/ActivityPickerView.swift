@@ -5,7 +5,7 @@ struct ActivityPickerView: View {
 
     private let options = [
         "😴 Устал", "🏃 Спорт", "👥 С людьми",
-        "🏠 Дома", "💼 Работа", "📚 Учёба", "🎮 Отдых", "🍕 Еда"
+        "🏠 Дома", "💼 Работа", "📚 Учёба", "🎮 Отдых", "🍕 Еда",
     ]
 
     var body: some View {
@@ -17,19 +17,18 @@ struct ActivityPickerView: View {
                         .font(.system(size: 13))
                         .padding(.horizontal, 12).padding(.vertical, 7)
                         .background(
-                            isOn ? Color.accentTeal.opacity(0.18) : Color.bgCard,
+                            isOn ? Color.bgElevated : Color.bgCard,
                             in: Capsule()
                         )
                         .overlay(
                             Capsule().strokeBorder(
-                                isOn ? Color.accentTeal : Color.clear,
+                                isOn ? Color.accentWhite : Color.clear,
                                 lineWidth: 1
                             )
                         )
-                        .foregroundStyle(isOn ? Color.accentTeal : Color.textSecondary)
+                        .foregroundStyle(isOn ? Color.textPrimary : Color.textSecondary)
                         .onTapGesture {
-                            if isOn { selected.removeAll { $0 == option } }
-                            else { selected.append(option) }
+                            if isOn { selected.removeAll { $0 == option } } else { selected.append(option) }
                             Haptics.tap(.light)
                         }
                 }
@@ -40,7 +39,7 @@ struct ActivityPickerView: View {
 }
 
 #Preview {
-    @Previewable @State var selected: [String] = ["🏃 Спорт"]
+    @Previewable @State var selected = ["🏃 Спорт"]
     ActivityPickerView(selected: $selected)
         .padding(.vertical, 8)
         .background(Color.bgPrimary)

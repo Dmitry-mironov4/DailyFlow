@@ -16,13 +16,9 @@ struct HabitCardView: View {
         HabitService.streak(for: habit, relativeTo: .now)
     }
 
-    private var accentColor: Color {
-        Color(hex: habit.colorHex)
-    }
-
     var body: some View {
         HStack(spacing: 14) {
-            CircularProgressRing(isDone: isDoneToday, color: accentColor)
+            HabitToggleRing(isDone: isDoneToday)
                 .frame(width: 46, height: 46)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -33,19 +29,26 @@ struct HabitCardView: View {
             Spacer()
 
             VStack(spacing: 2) {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(streakResult.isActive ? accentColor : Color.textGhost)
                 Text("\(streakResult.value)")
                     .font(.system(size: 18, weight: .semibold)).monospacedDigit()
-                    .foregroundStyle(streakResult.isActive ? accentColor : Color.textSecondary)
+                    .foregroundStyle(streakResult.isActive ? Color.textPrimary : Color.textSecondary)
+                Text("\(streakResult.value == 1 ? "день" : "дн.")")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.textSecondary)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .background(
-            isDoneToday ? accentColor.opacity(0.08) : Color.bgCard,
+            isDoneToday ? Color.bgElevated : Color.bgCard,
             in: .rect(cornerRadius: 14)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(
+                    isDoneToday ? Color.accentDone.opacity(0.25) : Color.borderCard,
+                    lineWidth: 1
+                )
         )
         .contentShape(.rect)
         .onTapGesture {
@@ -75,24 +78,26 @@ struct HabitCardView: View {
     }
 }
 
-// MARK: — CircularProgressRing
+// MARK: — HabitToggleRing
 
-struct CircularProgressRing: View {
+private struct HabitToggleRing: View {
     let isDone: Bool
-    let color: Color
 
     var body: some View {
         ZStack {
-            Circle().stroke(color.opacity(0.18), lineWidth: 3)
+            Circle().stroke(Color.separator, lineWidth: 2)
             Circle()
                 .trim(from: 0, to: isDone ? 1 : 0)
-                .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(
+                    isDone ? Color.accentDone : Color.clear,
+                    style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                )
                 .rotationEffect(.degrees(-90))
                 .animation(.spring(response: 0.5, dampingFraction: 0.65), value: isDone)
             if isDone {
                 Image(systemName: "checkmark")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(color)
+                    .foregroundStyle(Color.accentDone)
                     .transition(.scale.combined(with: .opacity))
             }
         }
@@ -111,8 +116,6 @@ struct WeekDotsRow: View {
         return (0 ..< 7).map { cal.date(byAdding: .day, value: $0 - 6, to: today)! }
     }
 
-    private var accentColor: Color { Color(hex: habit.colorHex) }
-
     var body: some View {
         HStack(spacing: 4) {
             ForEach(days, id: \.self) { day in
@@ -122,11 +125,11 @@ struct WeekDotsRow: View {
 
                 ZStack {
                     Circle()
-                        .fill(isDone ? accentColor : Color.bgPixelInactive)
+                        .fill(isDone ? Color.accentWhite.opacity(0.9) : Color.bgElevated)
                         .frame(width: size, height: size)
-                    if isToday && !isDone {
+                    if isToday, !isDone {
                         Circle()
-                            .strokeBorder(accentColor.opacity(0.4), lineWidth: 1)
+                            .strokeBorder(Color.textSecondary.opacity(0.4), lineWidth: 1)
                             .frame(width: size, height: size)
                     }
                 }
@@ -138,7 +141,7 @@ struct WeekDotsRow: View {
 // MARK: — Previews
 
 #Preview("Не выполнена") {
-    let habit = Habit(name: "Медитация", colorHex: "2DD4A0", sortOrder: 0)
+    let habit = Habit(name: "Медитация", colorHex: "808080", sortOrder: 0)
     return HabitCardView(habit: habit, onToggle: {}, onEdit: {}, onDelete: {}, onShowDetail: {})
         .padding()
         .background(Color.bgPrimary)
@@ -147,7 +150,7 @@ struct WeekDotsRow: View {
 
 #Preview("Выполнена сегодня") {
     let container = ModelContainer.preview(.empty)
-    let habit = Habit(name: "Спорт", colorHex: "F0A23B", sortOrder: 0)
+    let habit = Habit(name: "Спорт", colorHex: "808080", sortOrder: 0)
     let today = Calendar.current.startOfDay(for: .now)
     container.mainContext.insert(habit)
     container.mainContext.insert(HabitLog(date: today, habit: habit))
