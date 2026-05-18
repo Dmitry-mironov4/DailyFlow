@@ -91,7 +91,9 @@ struct TodayContentView: View {
 
                 AddTaskBarView(
                     text: $addBarText,
-                    onSubmit: { TaskService.add(title: $0, on: dateAnchor, in: ctx) }
+                    onSubmit: { title, time in
+                        TaskService.add(title: title, scheduledTime: time, on: dateAnchor, in: ctx)
+                    }
                 )
             }
             .padding(.horizontal, 16)
