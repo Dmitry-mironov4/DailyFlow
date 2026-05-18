@@ -35,12 +35,19 @@ struct TaskRowView: View {
     let onFinishEdit: (String) -> Void
     let onSetFocus: () -> Void
     let onDelete: () -> Void
+    var onSetPriority: ((Int) -> Void)? = nil
 
     @FocusState private var fieldFocused: Bool
     @State private var editBuffer = ""
 
     var body: some View {
         HStack(spacing: 8) {
+            if task.priority > 0 {
+                Circle()
+                    .fill(task.priority == 2 ? Color(hex: 0xFF6B6B) : Color.accentAmber)
+                    .frame(width: 6, height: 6)
+                    .padding(.leading, 4)
+            }
             CheckboxView(isCompleted: task.isCompleted) {
                 Haptics.tap(.medium)
                 onToggle()
@@ -87,6 +94,13 @@ struct TaskRowView: View {
                     task.isFocus ? "Снять с фокуса" : "Сделать фокусом",
                     systemImage: task.isFocus ? "star.slash" : "star"
                 )
+            }
+            if let onSetPriority {
+                Menu("Приоритет") {
+                    Button("🔴 Срочная") { onSetPriority(2) }
+                    Button("🟡 Важная") { onSetPriority(1) }
+                    Button("Обычная") { onSetPriority(0) }
+                }
             }
             Button { onStartEdit() } label: {
                 Label("Изменить", systemImage: "pencil")

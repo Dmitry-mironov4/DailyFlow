@@ -6,9 +6,11 @@ struct TodayContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Query private var todayTasks: [DailyTask]
     @Query private var pendingFromPast: [DailyTask]
+    @Query(sort: \TaskList.sortOrder) private var allLists: [TaskList]
 
     @State private var addBarText = ""
     @State private var editingTaskId: UUID?
+    @State private var selectedList: TaskList?
 
     private let dateAnchor: Date
 
@@ -29,16 +31,21 @@ struct TodayContentView: View {
     }
 
     private var regular: [DailyTask] {
-        todayTasks.filter { !$0.isFocus }
+        let base = todayTasks.filter { !$0.isFocus }
+        let filtered: [DailyTask]
+        if let list = selectedList {
+            filtered = base.filter { $0.list?.id == list.id }
+        } else {
+            filtered = base
+        }
+        return filtered.sorted {
+            if $0.priority != $1.priority { return $0.priority > $1.priority }
+            return $0.createdAt < $1.createdAt
+        }
     }
 
-    private var completedCount: Int {
-        todayTasks.filter(\.isCompleted).count
-    }
-
-    private var totalCount: Int {
-        todayTasks.count
-    }
+    private var completedCount: Int { todayTasks.filter(\.isCompleted).count }
+    private var totalCount: Int { todayTasks.count }
 
     var body: some View {
         ScrollView {
@@ -67,6 +74,8 @@ struct TodayContentView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
+                filterPills
+
                 if !todayTasks.isEmpty {
                     Text("ЗАДАЧИ — \(completedCount)/\(totalCount)")
                         .dfCaption()
@@ -82,19 +91,17 @@ struct TodayContentView: View {
                                 onStartEdit: { editingTaskId = task.id },
                                 onFinishEdit: { commitEdit(task, $0) },
                                 onSetFocus: { try? TaskService.setFocus(task, in: ctx) },
-                                onDelete: { TaskService.delete(task, in: ctx) }
+                                onDelete: { TaskService.delete(task, in: ctx) },
+                                onSetPriority: { TaskService.updatePriority(task, to: $0, in: ctx) }
                             )
                         }
                     }
                     .dfCard()
                 }
 
-                AddTaskBarView(
-                    text: $addBarText,
-                    onSubmit: { title, time in
-                        TaskService.add(title: title, scheduledTime: time, on: dateAnchor, in: ctx)
-                    }
-                )
+                AddTaskBarView(text: $addBarText) { title, priority, time in
+                    TaskService.add(title: title, scheduledTime: time, on: dateAnchor, priority: priority, in: ctx)
+                }
             }
             .padding(.horizontal, 16)
             .animation(.spring(duration: 0.35, bounce: 0.15), value: focus?.id)
@@ -107,12 +114,34 @@ struct TodayContentView: View {
         }
     }
 
+    // MARK: — Filter pills
+
+    private var filterPills: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                FilterPill(label: "Все", isSelected: selectedList == nil) {
+                    selectedList = nil
+                }
+                ForEach(allLists) { lst in
+                    FilterPill(
+                        label: "\(lst.emoji) \(lst.name)",
+                        isSelected: selectedList?.id == lst.id
+                    ) {
+                        selectedList = lst
+                    }
+                }
+            }
+            .padding(.horizontal, 0)
+            .padding(.vertical, 4)
+        }
+    }
+
+    // MARK: — Header
+
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(dateCaption)
-                .dfCaption()
-            Text("Сегодня")
-                .dfTitle()
+            Text(dateCaption).dfCaption()
+            Text("Сегодня").dfTitle()
         }
         .padding(.bottom, 14)
     }

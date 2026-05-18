@@ -11,6 +11,13 @@ extension Color {
     static let textSecondary   = Color(hex: 0x8A7860)  // тёплый серо-коричневый
     static let textGhost       = Color(hex: 0x5E4E38)  // тёмная карамель-тень
 
+    // Палитра привычек
+    static let habitMint  = Color(hex: 0x3ECFB2)
+    static let habitCoral = Color(hex: 0xFF6B6B)
+    static let habitSky   = Color(hex: 0x5BA4F5)
+    static let habitOlive = Color(hex: 0x8BBF4D)
+    static let habitRose  = Color(hex: 0xE8789A)
+
     init(hex: UInt32) {
         let red = Double((hex >> 16) & 0xFF) / 255
         let green = Double((hex >> 8) & 0xFF) / 255

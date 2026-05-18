@@ -1,12 +1,10 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct InsightsContentView: View {
     let today: Date
 
     @Environment(\.modelContext) private var ctx
-    // @Query без предикатов — только для реактивного триггера перерендера.
-    // Фильтрация и расчёты — в InsightsService через ctx.fetch.
     @Query private var allTasks: [DailyTask]
     @Query private var allHabits: [Habit]
     @Query private var allEntries: [JournalEntry]
@@ -19,9 +17,17 @@ struct InsightsContentView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
 
+                WeeklyNarrativeView(
+                    tasksRate: tasksRate,
+                    habitsRate: habitsRate,
+                    moodRate: moodRate,
+                    topStreak: topStreaks.first?.value ?? 0
+                )
+
                 metricsRow
                 streaksSection
                 moodSection
+                heatmapSection
             }
             .padding(.bottom, 16)
         }
@@ -31,18 +37,11 @@ struct InsightsContentView: View {
 
     // MARK: — Reactivity bridge
 
-    /// Ссылка на массивы @Query внутри computed-properties — чтобы SwiftUI
-    /// перерисовал View при изменении данных. Сами массивы не используются.
     private var dataChangeToken: Int {
         allTasks.count &+ allHabits.count &+ allEntries.count
     }
 
     // MARK: — Метрики
-
-    private var uniqueDataDays: Int {
-        _ = dataChangeToken
-        return InsightsService.uniqueDataDays(today: today, in: ctx)
-    }
 
     private var tasksRate: Double? {
         _ = dataChangeToken
@@ -59,6 +58,21 @@ struct InsightsContentView: View {
         return InsightsService.moodRate(today: today, in: ctx)
     }
 
+    private var previousTasksRate: Double? {
+        _ = dataChangeToken
+        return InsightsService.previousTasksRate(today: today, in: ctx)
+    }
+
+    private var previousHabitsRate: Double? {
+        _ = dataChangeToken
+        return InsightsService.previousHabitsRate(today: today, in: ctx)
+    }
+
+    private var previousMoodRate: Double? {
+        _ = dataChangeToken
+        return InsightsService.previousMoodRate(today: today, in: ctx)
+    }
+
     private var topStreaks: [StreakItem] {
         _ = dataChangeToken
         return InsightsService.topStreaks(limit: 3, today: today, in: ctx)
@@ -73,9 +87,9 @@ struct InsightsContentView: View {
 
     private var metricsRow: some View {
         HStack(spacing: 12) {
-            MetricCardView(kind: .tasks, rate: tasksRate)
-            MetricCardView(kind: .habits, rate: habitsRate)
-            MetricCardView(kind: .mood, rate: moodRate)
+            MetricCardView(kind: .tasks, rate: tasksRate, previousRate: previousTasksRate)
+            MetricCardView(kind: .habits, rate: habitsRate, previousRate: previousHabitsRate)
+            MetricCardView(kind: .mood, rate: moodRate, previousRate: previousMoodRate)
         }
         .padding(.horizontal, 16)
     }
@@ -103,6 +117,16 @@ struct InsightsContentView: View {
             Text("НАСТРОЕНИЕ — ПОСЛЕДНИЕ 7 ДНЕЙ").dfCaption()
                 .padding(.horizontal, 16)
             MoodChartView(series: moodSeries, today: today)
+                .dfCard()
+                .padding(.horizontal, 16)
+        }
+    }
+
+    private var heatmapSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("АКТИВНОСТЬ — 5 НЕДЕЛЬ").dfCaption()
+                .padding(.horizontal, 16)
+            MonthlyHeatmapView(today: today)
                 .dfCard()
                 .padding(.horizontal, 16)
         }

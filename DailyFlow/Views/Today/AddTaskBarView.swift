@@ -2,8 +2,9 @@ import SwiftUI
 
 struct AddTaskBarView: View {
     @Binding var text: String
-    let onSubmit: (String, Date?) -> Void
+    let onSubmit: (String, Int, Date?) -> Void
     @FocusState private var focused: Bool
+    @State private var priority: Int = 0
     @State private var scheduledTime: Date?
     @State private var showTimePicker = false
 
@@ -23,6 +24,17 @@ struct AddTaskBarView: View {
                     .font(.system(size: 13))
 
                 if focused {
+                    Button {
+                        priority = (priority + 1) % 3
+                        Haptics.tap(.light)
+                    } label: {
+                        Image(systemName: priority > 0 ? "circle.fill" : "circle")
+                            .font(.system(size: 14))
+                            .foregroundStyle(priorityColor)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity.combined(with: .scale))
+
                     Button {
                         showTimePicker.toggle()
                     } label: {
@@ -48,10 +60,10 @@ struct AddTaskBarView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .contentShape(.rect)
-        .onTapGesture { focused = true }
         .animation(.spring(duration: 0.25), value: showTimePicker)
         .animation(.easeInOut(duration: 0.2), value: focused)
+        .contentShape(.rect)
+        .onTapGesture { focused = true }
     }
 
     private var timePickerRow: some View {
@@ -82,12 +94,21 @@ struct AddTaskBarView: View {
         .padding(.vertical, 8)
     }
 
+    private var priorityColor: Color {
+        switch priority {
+        case 1: return Color.accentAmber
+        case 2: return Color(hex: 0xFF6B6B)
+        default: return Color.textGhost
+        }
+    }
+
     private func submit() {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         Haptics.tap(.light)
-        onSubmit(trimmed, scheduledTime)
+        onSubmit(trimmed, priority, scheduledTime)
         text = ""
+        priority = 0
         scheduledTime = nil
         showTimePicker = false
     }
@@ -95,7 +116,7 @@ struct AddTaskBarView: View {
 
 #Preview {
     @Previewable @State var text = ""
-    AddTaskBarView(text: $text, onSubmit: { _, _ in })
+    AddTaskBarView(text: $text, onSubmit: { _, _, _ in })
         .padding(.horizontal, 16)
         .background(Color.bgPrimary)
         .preferredColorScheme(.dark)

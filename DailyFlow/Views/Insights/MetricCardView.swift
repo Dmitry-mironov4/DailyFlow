@@ -32,18 +32,26 @@ enum MetricKind {
 
 struct MetricCardView: View {
     let kind: MetricKind
-    /// rate ∈ [0.0 ... 1.0]; nil → "—"
     let rate: Double?
+    var previousRate: Double? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(kind.caption).dfCaption()
 
-            Text(formattedValue)
-                .dfStat()
-                .foregroundStyle(rate == nil ? Color.textGhost : kind.color)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(formattedValue)
+                    .dfStat()
+                    .foregroundStyle(rate == nil ? Color.textGhost : kind.color)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                if let trend = trendText {
+                    Text(trend.label)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(trend.color)
+                }
+            }
 
             progressBar
 
@@ -57,8 +65,15 @@ struct MetricCardView: View {
 
     private var formattedValue: String {
         guard let rate else { return "—" }
-        let percent = Int((rate * 100).rounded())
-        return "\(percent)%"
+        return "\(Int((rate * 100).rounded()))%"
+    }
+
+    private var trendText: (label: String, color: Color)? {
+        guard let r = rate, let p = previousRate else { return nil }
+        let diff = r - p
+        if diff > 0.04 { return ("↑ +\(Int((diff * 100).rounded()))%", Color.accentTeal) }
+        if diff < -0.04 { return ("↓ \(Int((diff * 100).rounded()))%", Color(hex: 0xFF6B6B)) }
+        return ("→", Color.textGhost)
     }
 
     private var progressBar: some View {
@@ -77,9 +92,9 @@ struct MetricCardView: View {
 
 #Preview {
     HStack(spacing: 12) {
-        MetricCardView(kind: .tasks, rate: 0.75)
-        MetricCardView(kind: .habits, rate: 0.62)
-        MetricCardView(kind: .mood, rate: 0.84)
+        MetricCardView(kind: .tasks, rate: 0.75, previousRate: 0.60)
+        MetricCardView(kind: .habits, rate: 0.62, previousRate: 0.70)
+        MetricCardView(kind: .mood, rate: 0.84, previousRate: 0.83)
     }
     .padding()
     .background(Color.bgPrimary)

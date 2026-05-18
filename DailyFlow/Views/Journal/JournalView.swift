@@ -20,6 +20,13 @@ struct JournalView: View {
                 JournalService.setMood(score, in: ctx)
             }
 
+            if entries.first?.moodScore != nil {
+                ActivityPickerView(selected: activitiesBinding)
+                    .padding(.top, 4)
+                    .padding(.horizontal, -16)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+
             JournalEditorView(entry: entries.first) { newText in
                 JournalService.setText(newText, in: ctx)
             }
@@ -27,9 +34,17 @@ struct JournalView: View {
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .animation(.easeInOut(duration: 0.25), value: entries.first?.moodScore)
         .background(Color.bgPrimary)
         .contentShape(Rectangle())
         .onTapGesture { dismissKeyboard() }
+    }
+
+    private var activitiesBinding: Binding<[String]> {
+        Binding(
+            get: { entries.first?.activities ?? [] },
+            set: { JournalService.setActivities($0, in: ctx) }
+        )
     }
 
     private var header: some View {
