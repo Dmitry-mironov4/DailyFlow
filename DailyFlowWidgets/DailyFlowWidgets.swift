@@ -8,20 +8,28 @@ import WidgetKit
 struct DailyFlowEntry: TimelineEntry {
     let date: Date
     let tasks: [DailyTask]
+
+    var completedCount: Int {
+        tasks.filter(\.isCompleted).count
+    }
+
+    var totalCount: Int {
+        tasks.count
+    }
 }
 
 // MARK: - Provider
 
 struct DailyFlowWidgetProvider: TimelineProvider {
-    func placeholder(in context: Context) -> DailyFlowEntry {
+    func placeholder(in _: Context) -> DailyFlowEntry {
         DailyFlowEntry(date: .now, tasks: [])
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (DailyFlowEntry) -> Void) {
+    func getSnapshot(in _: Context, completion: @escaping (DailyFlowEntry) -> Void) {
         completion(DailyFlowEntry(date: .now, tasks: fetchTodayTasks()))
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<DailyFlowEntry>) -> Void) {
+    func getTimeline(in _: Context, completion: @escaping (Timeline<DailyFlowEntry>) -> Void) {
         let tasks = fetchTodayTasks()
         let entry = DailyFlowEntry(date: .now, tasks: tasks)
         let midnight = Calendar.current.startOfDay(for: .now.addingTimeInterval(86400))
@@ -47,13 +55,15 @@ struct DailyFlowWidgetProvider: TimelineProvider {
 // MARK: - Widget colors (зеркало токенов — extension target не имеет доступа к модулю приложения)
 
 private extension Color {
-    static let wBgPrimary = Color(red: 0.051, green: 0.051, blue: 0.051)
-    static let wAccentTeal = Color(red: 0.176, green: 0.831, blue: 0.627)
-    static let wTextPrimary = Color(red: 0.949, green: 0.949, blue: 0.949)
-    static let wTextSecondary = Color(red: 0.533, green: 0.533, blue: 0.533)
+    static let wBgPrimary = Color(red: 0.067, green: 0.071, blue: 0.078) // 0x111214
+    static let wBgCard = Color(red: 0.102, green: 0.110, blue: 0.122) // 0x1A1C1F
+    static let wAccent = Color(red: 0.961, green: 0.961, blue: 0.961) // 0xF5F5F5
+    static let wTextPrim = Color(red: 0.863, green: 0.863, blue: 0.863) // 0xDCDCDC
+    static let wTextSec = Color(red: 0.502, green: 0.502, blue: 0.502) // 0x808080
+    static let wDone = Color(red: 0.290, green: 0.871, blue: 0.502) // 0x4ADE80
 }
 
-// MARK: - EntryView
+// MARK: - Home Screen EntryView
 
 struct DailyFlowWidgetEntryView: View {
     var entry: DailyFlowEntry
@@ -62,23 +72,23 @@ struct DailyFlowWidgetEntryView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("СЕГОДНЯ")
                 .font(.system(size: 9, weight: .regular))
-                .foregroundStyle(Color.wTextSecondary)
+                .foregroundStyle(Color.wTextSec)
                 .tracking(0.5)
 
             if entry.tasks.isEmpty {
                 Text("Нет задач")
                     .font(.system(size: 12))
-                    .foregroundStyle(Color.wTextSecondary)
+                    .foregroundStyle(Color.wTextSec)
             } else {
                 ForEach(entry.tasks.prefix(5)) { task in
                     Button(intent: ToggleTaskIntent(taskID: task.id.uuidString)) {
                         HStack(spacing: 6) {
                             Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                                 .font(.system(size: 12))
-                                .foregroundStyle(task.isCompleted ? Color.wAccentTeal : Color.wTextSecondary)
+                                .foregroundStyle(task.isCompleted ? Color.wDone : Color.wTextSec)
                             Text(task.title)
                                 .font(.system(size: 12))
-                                .foregroundStyle(task.isCompleted ? Color.wTextSecondary : Color.wTextPrimary)
+                                .foregroundStyle(task.isCompleted ? Color.wTextSec : Color.wTextPrim)
                                 .strikethrough(task.isCompleted)
                                 .lineLimit(1)
                         }
@@ -95,9 +105,25 @@ struct DailyFlowWidgetEntryView: View {
     }
 }
 
-// MARK: - Widget
+// MARK: - Lock Screen EntryView
 
-@main
+struct LockScreenWidgetView: View {
+    var entry: DailyFlowEntry
+
+    var body: some View {
+        Gauge(
+            value: Double(entry.completedCount),
+            in: 0 ... Double(max(entry.totalCount, 1))
+        ) {
+            Image(systemName: "checkmark")
+        }
+        .gaugeStyle(.accessoryCircular)
+        .tint(Color.wAccent)
+    }
+}
+
+// MARK: - Home Screen Widget
+
 struct DailyFlowWidget: Widget {
     let kind = "DailyFlowWidget"
 
@@ -109,5 +135,31 @@ struct DailyFlowWidget: Widget {
         .configurationDisplayName("DailyFlow")
         .description("Задачи на сегодня")
         .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+// MARK: - Lock Screen Widget
+
+struct LockScreenWidget: Widget {
+    let kind = "LockScreenWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: DailyFlowWidgetProvider()) { entry in
+            LockScreenWidgetView(entry: entry)
+                .containerBackground(.clear, for: .widget)
+        }
+        .configurationDisplayName("DailyFlow — Экран блокировки")
+        .description("Прогресс задач дня")
+        .supportedFamilies([.accessoryCircular])
+    }
+}
+
+// MARK: - Widget Bundle
+
+@main
+struct DailyFlowWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        DailyFlowWidget()
+        LockScreenWidget()
     }
 }

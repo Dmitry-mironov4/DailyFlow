@@ -9,16 +9,16 @@ struct FilterPill: View {
         Button(action: onTap) {
             Text(label)
                 .font(.system(size: 13))
-                .foregroundStyle(isSelected ? Color.accentTeal : Color.textSecondary)
+                .foregroundStyle(isSelected ? Color.textPrimary : Color.textSecondary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
-                    isSelected ? Color.accentTeal.opacity(0.15) : Color.bgCard,
+                    isSelected ? Color.bgElevated : Color.bgCard,
                     in: Capsule()
                 )
                 .overlay(
                     Capsule().strokeBorder(
-                        isSelected ? Color.accentTeal.opacity(0.6) : Color.clear,
+                        isSelected ? Color.accentWhite.opacity(0.4) : Color.clear,
                         lineWidth: 1
                     )
                 )

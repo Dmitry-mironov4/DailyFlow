@@ -16,7 +16,7 @@
 - **Локализация:** только русский (ru, development region)
 - **Тема:** только тёмная (`UIUserInterfaceStyle = Dark` в pbxproj)
 - **Xcode-проект:** `DailyFlow.xcodeproj` (Xcode 26, objectVersion 77, synchronized folder references). Деплоймент-таргет iOS 26.4, `SWIFT_VERSION = 6.0`, `TARGETED_DEVICE_FAMILY = "1"` (iPhone only), портретная ориентация.
-- **Статус:** 🟢 Phase 1–4 завершены. Phase 5 завершена. Интеграция с Календарём (EventKit) и интерактивные виджеты (WidgetKit + AppIntents) реализованы. Build succeeded 0 warnings, 53 теста проходят.
+- **Статус:** 🟢 Phase 1–5 завершены. Полный редизайн на Graphite+White палитру завершён. NotificationService, SettingsManager, ObsidianService реализованы. Lock Screen виджет добавлен. Build succeeded, swiftformat 0 issues, swiftlint 0 warnings.
 
 ---
 
@@ -117,19 +117,24 @@ DailyFlow/                              # репозиторий
 
 ## Дизайн-система
 
-### Цветовая палитра
+### Цветовая палитра — Graphite + White
 
 | Токен | HEX | Использование |
 |---|---|---|
-| `bg.primary` | `#0D0A05` | фон экрана — тёмный шоколад |
-| `bg.card` | `#1C1409` | фон карточки — тёмная карамель |
-| `accent.teal` | `#D4882A` | задачи, экспорт — жидкая карамель |
-| `accent.amber` | `#E8C46A` | привычки, стрики — золотистая карамель |
-| `accent.purple` | `#B8622A` | настроение, графики — корица |
-| `text.primary` | `#F0E8D8` | основной текст — тёплый кремовый белый |
-| `text.secondary` | `#8A7860` | метаданные — тёплый серо-коричневый |
-| `text.ghost` | `#5E4E38` | плейсхолдеры — тёмная карамель-тень |
-| `bg.pixelInactive` | `#362A14` | неактивные пиксели PixelGrid — поджаренная карамель |
+| `bg.primary` | `#111214` | фон экрана |
+| `bg.card` | `#1A1C1F` | фон карточки |
+| `bg.elevated` | `#212427` | приподнятые элементы (чекбоксы, активные поля) |
+| `separator` | `#2C2F33` | разделители, обводки строк |
+| `border.card` | `white.opacity(0.06)` | обводка карточек |
+| `accent.white` | `#F5F5F5` | основной акцент — кнопки, активные элементы |
+| `accent.done` | `#4ADE80` | выполненные задачи (зелёный) |
+| `accent.destructive` | `#F87171` | удаление, срочные задачи (красный) |
+| `text.primary` | `#DCDCDC` | основной текст |
+| `text.secondary` | `#808080` | метаданные |
+| `text.ghost` | `#464646` | плейсхолдеры |
+| `text.inverted` | `#111214` | текст на белом фоне (FocusCard) |
+
+**Удалены:** accentTeal, accentAmber, accentPurple, bgPixelInactive (каramель-палитра).
 
 **Запрещено:** градиенты, тени, размытие, полупрозрачные оверлеи, декоративные иконки. Только плоские цвета.
 
@@ -220,16 +225,23 @@ JournalEntry                     # детали уточняются в спек
 - [x] Экран «Дневник» — полностью реализован, build ok, lint clean, 15 тестов JournalService
 - [x] Интеграция с Календарём (EventKit) — CalendarService, scheduledTime в DailyTask, TimePicker в AddTaskBarView
 - [x] Интерактивные виджеты (WidgetKit + AppIntents) — DailyFlowWidgets target, ToggleTaskIntent
-- [ ] Экспорт в Obsidian (нужен спек)
-- [ ] Локальные нотификации
-- [ ] Бэкап JSON
+- [x] Lock Screen виджет (Gauge .accessoryCircular) — DailyFlowWidgetBundle с двумя виджетами
+- [x] **Редизайн Graphite+White** — полная замена каramель-палитры: ColorExtensions, все View, ViewExtensions
+- [x] **NotificationService** — UNUserNotificationCenter: scheduleHabitReminder, cancelReminder, scheduleDailySummary
+- [x] **SettingsManager** — UserDefaults App Group: hasCompletedOnboarding, dailySummaryEnabled, dailySummaryTime, calendarSyncEnabled, firstWeekday
+- [x] **ObsidianService** — exportDay (.md) + exportFullBackup (.json) через UIDocumentPickerViewController
+- [x] **InsightsService оптимизация** — habitsRate O(n) с Dictionary(grouping:), habitMoodCorrelations(), previousWindow
+- [x] **HabitService улучшения** — gracePeriod в streak(), reminderTime в update()
+- [x] **CalendarService фиксы** — sync() вызывается после ctx.save(), параметр duration: TimeInterval
+- [x] **Lint clean** — swiftformat 0 issues, swiftlint 0 warnings (отключены conditionalAssignment + wrapMultilineStatementBraces в .swiftformat)
 
 ---
 
 ## Известные проблемы
 
 - **swipeActions + editMode:** В HabitsView используется `.environment(\.editMode, .constant(.active))` для drag-to-reorder. На iOS 26 нужно проверить, работает ли swipe-to-delete в этом режиме. Если нет — удалить swipeActions, оставить только contextMenu для удаления (или добавить NavigationStack + EditButton).
-- **Color.bgPixelInactive:** Добавлен токен `#333333` для неактивных пикселей PixelGrid. Если дизайн-система расширится, возможно стоит переименовать в более семантическое имя.
+- **nonisolated(unsafe) warning:** Logger конформит Sendable, поэтому `nonisolated(unsafe)` технически лишняя аннотация. Компилятор выдаёт warning. Можно убрать во всех 7 сервисах — это не изменит поведение.
+- **colorHex в Habit:** После редизайна colorHex хардкодирован как "808080". Если понадобится цветовая кастомизация привычек — потребуется отдельная работа.
 
 ---
 

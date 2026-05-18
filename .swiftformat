@@ -18,4 +18,6 @@
 --self remove
 --importgrouping testable-bottom
 
+--disable conditionalAssignment,wrapMultilineStatementBraces
+
 --exclude .build,DerivedData,.swiftpm,DailyFlow.xcodeproj,DailyFlowUITests

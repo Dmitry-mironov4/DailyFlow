@@ -1,5 +1,8 @@
 import Foundation
+import OSLog
 import SwiftData
+
+private nonisolated(unsafe) let logger = Logger(subsystem: "com.dmitry.DailyFlow", category: "TaskService")
 
 enum TaskService {
     @discardableResult
@@ -14,27 +17,38 @@ enum TaskService {
     ) -> DailyTask? {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        let task = DailyTask(title: trimmed, date: date, isFocus: isFocus, priority: priority, scheduledTime: scheduledTime)
+        let task = DailyTask(
+            title: trimmed,
+            date: date,
+            isFocus: isFocus,
+            priority: priority,
+            scheduledTime: scheduledTime
+        )
         task.list = list
         ctx.insert(task)
-        task.calendarEventID = CalendarService.sync(task)
+        do {
+            try ctx.save()
+            task.calendarEventID = CalendarService.sync(task)
+        } catch {
+            logger.error("add save: \(error.localizedDescription)")
+        }
         return task
     }
 
     static func updatePriority(_ task: DailyTask, to priority: Int, in ctx: ModelContext) {
         task.priority = priority
-        try? ctx.save()
+        do { try ctx.save() } catch { logger.error("updatePriority save: \(error.localizedDescription)") }
     }
 
     static func moveToList(_ task: DailyTask, list: TaskList?, in ctx: ModelContext) {
         task.list = list
-        try? ctx.save()
+        do { try ctx.save() } catch { logger.error("moveToList save: \(error.localizedDescription)") }
     }
 
     static func toggleCompletion(_ task: DailyTask, in ctx: ModelContext) {
         task.isCompleted.toggle()
         task.completedAt = task.isCompleted ? .now : nil
-        try? ctx.save()
+        do { try ctx.save() } catch { logger.error("toggleCompletion save: \(error.localizedDescription)") }
     }
 
     static func setFocus(_ task: DailyTask, in ctx: ModelContext) throws {
@@ -61,29 +75,38 @@ enum TaskService {
             CalendarService.remove(eventID: eventID)
         }
         ctx.delete(task)
-        try? ctx.save()
+        do { try ctx.save() } catch { logger.error("delete save: \(error.localizedDescription)") }
     }
 
     static func updateTitle(_ task: DailyTask, to title: String, in ctx: ModelContext) {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         task.title = trimmed
-        task.calendarEventID = CalendarService.sync(task)
-        try? ctx.save()
+        do {
+            try ctx.save()
+            task.calendarEventID = CalendarService.sync(task)
+        } catch {
+            logger.error("updateTitle save: \(error.localizedDescription)")
+        }
     }
 
     static func setScheduledTime(_ task: DailyTask, time: Date?, in ctx: ModelContext) {
         if let time {
             task.scheduledTime = time
-            task.calendarEventID = CalendarService.sync(task)
+            do {
+                try ctx.save()
+                task.calendarEventID = CalendarService.sync(task)
+            } catch {
+                logger.error("setScheduledTime save: \(error.localizedDescription)")
+            }
         } else {
             if let eventID = task.calendarEventID {
                 CalendarService.remove(eventID: eventID)
                 task.calendarEventID = nil
             }
             task.scheduledTime = nil
+            do { try ctx.save() } catch { logger.error("setScheduledTime (clear) save: \(error.localizedDescription)") }
         }
-        try? ctx.save()
     }
 
     @discardableResult

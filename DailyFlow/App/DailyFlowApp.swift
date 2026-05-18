@@ -31,12 +31,18 @@ struct DailyFlowApp: App {
     private func seedDefaultLists() {
         let ctx = container.mainContext
         guard (try? ctx.fetch(FetchDescriptor<TaskList>()))?.isEmpty == true else { return }
-        let defaults: [(String, String, Int)] = [
-            ("Входящие", "📥", 0), ("Учёба", "🎓", 1),
-            ("Личное", "👤", 2), ("Работа", "💼", 3)
+        struct ListSeed { let name: String
+            let emoji: String
+            let order: Int
+        }
+        let defaults = [
+            ListSeed(name: "Входящие", emoji: "📥", order: 0),
+            ListSeed(name: "Учёба", emoji: "🎓", order: 1),
+            ListSeed(name: "Личное", emoji: "👤", order: 2),
+            ListSeed(name: "Работа", emoji: "💼", order: 3),
         ]
-        for (name, emoji, order) in defaults {
-            ctx.insert(TaskList(name: name, emoji: emoji, sortOrder: order))
+        for seed in defaults {
+            ctx.insert(TaskList(name: seed.name, emoji: seed.emoji, sortOrder: seed.order))
         }
         try? ctx.save()
     }

@@ -7,25 +7,17 @@ enum MetricKind {
 
     var caption: String {
         switch self {
-        case .tasks: return "ЗАДАЧИ"
-        case .habits: return "ПРИВЫЧКИ"
-        case .mood: return "НАСТРОЕНИЕ"
+        case .tasks: "ЗАДАЧИ"
+        case .habits: "ПРИВЫЧКИ"
+        case .mood: "НАСТРОЕНИЕ"
         }
     }
 
     var label: String {
         switch self {
-        case .tasks: return "закрыто за 7 дн."
-        case .habits: return "в среднем за день"
-        case .mood: return "в среднем за 7 дн."
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .tasks: return .accentTeal
-        case .habits: return .accentAmber
-        case .mood: return .accentPurple
+        case .tasks: "закрыто за 7 дн."
+        case .habits: "в среднем за день"
+        case .mood: "в среднем за 7 дн."
         }
     }
 }
@@ -33,7 +25,7 @@ enum MetricKind {
 struct MetricCardView: View {
     let kind: MetricKind
     let rate: Double?
-    var previousRate: Double? = nil
+    var previousRate: Double?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -42,14 +34,14 @@ struct MetricCardView: View {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(formattedValue)
                     .dfStat()
-                    .foregroundStyle(rate == nil ? Color.textGhost : kind.color)
+                    .foregroundStyle(rate == nil ? Color.textGhost : Color.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
                 if let trend = trendText {
-                    Text(trend.label)
+                    Text(trend)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(trend.color)
+                        .foregroundStyle(Color.textSecondary)
                 }
             }
 
@@ -68,20 +60,20 @@ struct MetricCardView: View {
         return "\(Int((rate * 100).rounded()))%"
     }
 
-    private var trendText: (label: String, color: Color)? {
-        guard let r = rate, let p = previousRate else { return nil }
-        let diff = r - p
-        if diff > 0.04 { return ("↑ +\(Int((diff * 100).rounded()))%", Color.accentTeal) }
-        if diff < -0.04 { return ("↓ \(Int((diff * 100).rounded()))%", Color(hex: 0xFF6B6B)) }
-        return ("→", Color.textGhost)
+    private var trendText: String? {
+        guard let current = rate, let prev = previousRate else { return nil }
+        let diff = current - prev
+        if diff > 0.04 { return "↑ +\(Int((diff * 100).rounded()))%" }
+        if diff < -0.04 { return "↓ \(Int((diff * 100).rounded()))%" }
+        return "→"
     }
 
     private var progressBar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Rectangle().fill(Color.bgPixelInactive)
+                Rectangle().fill(Color.bgElevated)
                 Rectangle()
-                    .fill(kind.color)
+                    .fill(Color.accentWhite)
                     .frame(width: max(0, geo.size.width * (rate ?? 0)))
             }
         }

@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct ContentView: View {
-    // Явный selection + .tag() обязателен: без него SwiftUI на iOS 26
-    // идентифицирует tab-children по структурной идентичности. TodayView
-    // и InsightsView имеют идентичные signatures (`@State Date dateAnchor`
-    // + `body` с `.id(dateAnchor)` и одинаковым значением), поэтому первый
-    // тап на «Инсайты» после старта приложения проглатывался.
+    /// Явный selection + .tag() обязателен: без него SwiftUI на iOS 26
+    /// идентифицирует tab-children по структурной идентичности. TodayView
+    /// и InsightsView имеют идентичные signatures (`@State Date dateAnchor`
+    /// + `body` с `.id(dateAnchor)` и одинаковым значением), поэтому первый
+    /// тап на «Инсайты» после старта приложения проглатывался.
     @State private var selection: Int = 0
 
     var body: some View {
@@ -31,13 +31,19 @@ struct ContentView: View {
     private func configureTabBar() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Color.bgPrimary)
+        appearance.backgroundColor = UIColor(Color.bgCard)
+
+        let separator = UIColor(Color.separator)
+        appearance.shadowColor = separator
+
         let ghost = UIColor(Color.textGhost)
         appearance.stackedLayoutAppearance.normal.iconColor = ghost
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: ghost]
-        let teal = UIColor(Color.accentTeal)
-        appearance.stackedLayoutAppearance.selected.iconColor = teal
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: teal]
+
+        let white = UIColor(Color.accentWhite)
+        appearance.stackedLayoutAppearance.selected.iconColor = white
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: white]
+
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
     }

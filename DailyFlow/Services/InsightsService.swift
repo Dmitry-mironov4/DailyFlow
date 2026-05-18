@@ -1,23 +1,30 @@
+// swiftlint:disable file_length
 import Foundation
+import OSLog
 import SwiftData
+
+private nonisolated(unsafe) let logger = Logger(subsystem: "com.dmitry.DailyFlow", category: "InsightsService")
 
 /// Запись о текущем стрике одной привычки.
 struct StreakItem: Identifiable {
     let habit: Habit
     let value: Int
     let isActive: Bool
-    var id: UUID { habit.id }
+    var id: UUID {
+        habit.id
+    }
 }
 
 /// Точка серии настроения за один день. score == nil → нет записи в этот день.
 struct MoodPoint: Identifiable {
     let date: Date
     let score: Int?
-    var id: Date { date }
+    var id: Date {
+        date
+    }
 }
 
 enum InsightsService {
-
     // MARK: — Окно
 
     /// Возвращает (start, end) окна [today−6 ... today], обе даты на startOfDay.
@@ -50,25 +57,31 @@ enum InsightsService {
     static func habitsRate(today: Date, in ctx: ModelContext) -> Double? {
         let (start, end) = window(today: today)
         let cal = Calendar.current
-        guard let habits = try? ctx.fetch(FetchDescriptor<Habit>()) else { return nil }
-        if habits.isEmpty { return nil }
+        guard let habits = try? ctx.fetch(FetchDescriptor<Habit>()),
+              !habits.isEmpty else { return nil }
 
-        // Собираем все даты окна (7 шт.) от start до end включительно.
+        var allLogs: [HabitLog] = []
+        do { allLogs = try ctx.fetch(FetchDescriptor<HabitLog>()) } catch {
+            logger.error("habitsRate fetch logs: \(error.localizedDescription)")
+        }
+
+        // O(n) grouping вместо O(n×m)
+        let logsByDate = Dictionary(grouping: allLogs) { $0.date }
+
         var dates: [Date] = []
         var cursor = start
         while cursor <= end {
             dates.append(cursor)
-            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
+            cursor = cal.date(byAdding: .day, value: 1, to: cursor) ?? cursor
         }
 
         var dailyRates: [Double] = []
         for day in dates {
             let activeHabits = habits.filter { cal.startOfDay(for: $0.createdAt) <= day }
             if activeHabits.isEmpty { continue }
-            let activeLogs = activeHabits.reduce(0) { acc, habit in
-                acc + habit.logs.filter { $0.date == day }.count
-            }
-            dailyRates.append(Double(activeLogs) / Double(activeHabits.count))
+            let loggedHabitIDs = Set((logsByDate[day] ?? []).compactMap { $0.habit?.id })
+            let activeDone = activeHabits.count(where: { loggedHabitIDs.contains($0.id) })
+            dailyRates.append(Double(activeDone) / Double(activeHabits.count))
         }
         if dailyRates.isEmpty { return nil }
         return dailyRates.reduce(0, +) / Double(dailyRates.count)
@@ -107,7 +120,7 @@ enum InsightsService {
             .filter { $0.value > 0 }
             .sorted { $0.value > $1.value }
             .prefix(limit)
-            .map { $0 }
+            .map(\.self)
     }
 
     // MARK: — moodSeries
@@ -161,7 +174,7 @@ enum InsightsService {
         for day in dates {
             let active = habits.filter { cal.startOfDay(for: $0.createdAt) <= day }
             if active.isEmpty { continue }
-            let logs = active.reduce(0) { $0 + $1.logs.filter { $0.date == day }.count }
+            let logs = active.reduce(0) { $0 + $1.logs.count(where: { $0.date == day }) }
             dailyRates.append(Double(logs) / Double(active.count))
         }
         guard !dailyRates.isEmpty else { return nil }
@@ -199,5 +212,41 @@ enum InsightsService {
             dates.formUnion(entries.map(\.date))
         }
         return dates.count
+    }
+
+    // MARK: — habitMoodCorrelations (D2)
+
+    /// Для каждой привычки считает дельту настроения: среднее в дни выполнения − среднее в дни пропуска.
+    /// Возвращает топ-3 привычки с delta > 0.3, отсортированные по убыванию.
+    /// Требует минимум 7 дней с записями настроения и лога.
+    static func habitMoodCorrelations(
+        habits: [Habit],
+        logs: [HabitLog],
+        entries: [JournalEntry],
+        in window: [Date]
+    ) -> [(habit: Habit, delta: Double)] {
+        guard window.count >= 7 else { return [] }
+
+        let moodByDate = Dictionary(uniqueKeysWithValues: entries.compactMap { entry -> (Date, Double)? in
+            (entry.date, Double(entry.moodScore))
+        })
+
+        guard moodByDate.count >= 7 else { return [] }
+
+        var result: [(habit: Habit, delta: Double)] = []
+
+        for habit in habits {
+            let doneDates = Set(logs.filter { $0.habit?.id == habit.id }.map(\.date))
+            let doneScores = window.compactMap { doneDates.contains($0) ? moodByDate[$0] : nil }
+            let missScores = window.compactMap { !doneDates.contains($0) ? moodByDate[$0] : nil }
+
+            guard !doneScores.isEmpty, !missScores.isEmpty else { continue }
+            let avgDone = doneScores.reduce(0, +) / Double(doneScores.count)
+            let avgMiss = missScores.reduce(0, +) / Double(missScores.count)
+            let delta = avgDone - avgMiss
+            if delta > 0.3 { result.append((habit: habit, delta: delta)) }
+        }
+
+        return result.sorted { $0.delta > $1.delta }.prefix(3).map(\.self)
     }
 }

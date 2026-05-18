@@ -4,26 +4,55 @@ struct CheckboxView: View {
     let isCompleted: Bool
     let onTap: () -> Void
 
+    @State private var justCompleted = false
+
     var body: some View {
-        Button(action: onTap) {
+        Button(action: handleTap) {
             ZStack {
                 Circle()
-                    .strokeBorder(isCompleted ? Color.clear : Color(hex: 0x333333), lineWidth: 1.5)
+                    .strokeBorder(
+                        isCompleted ? Color.clear : Color.separator,
+                        lineWidth: 1.5
+                    )
                     .background(
-                        Circle().fill(isCompleted ? Color.accentTeal : Color.clear)
+                        Circle().fill(checkboxFill)
                     )
                     .frame(width: 15, height: 15)
-                if isCompleted {
+                if isCompleted || justCompleted {
                     Image(systemName: "checkmark")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(checkmarkColor)
                 }
             }
         }
         .buttonStyle(.plain)
         .frame(width: 44, height: 44)
         .contentShape(.circle)
-        .animation(.easeInOut(duration: 0.15), value: isCompleted)
+        .animation(.easeOut(duration: 0.15), value: isCompleted)
+        .animation(.easeOut(duration: 0.15), value: justCompleted)
+        .onChange(of: isCompleted) { _, newValue in
+            if newValue {
+                justCompleted = true
+                Task {
+                    try? await Task.sleep(for: .milliseconds(600))
+                    justCompleted = false
+                }
+            }
+        }
+    }
+
+    private var checkboxFill: Color {
+        if justCompleted { return Color.accentDone }
+        if isCompleted { return Color.bgElevated }
+        return .clear
+    }
+
+    private var checkmarkColor: Color {
+        justCompleted ? .white : Color.textSecondary
+    }
+
+    private func handleTap() {
+        onTap()
     }
 }
 
@@ -35,7 +64,7 @@ struct TaskRowView: View {
     let onFinishEdit: (String) -> Void
     let onSetFocus: () -> Void
     let onDelete: () -> Void
-    var onSetPriority: ((Int) -> Void)? = nil
+    var onSetPriority: ((Int) -> Void)?
 
     @FocusState private var fieldFocused: Bool
     @State private var editBuffer = ""
@@ -44,7 +73,7 @@ struct TaskRowView: View {
         HStack(spacing: 8) {
             if task.priority > 0 {
                 Circle()
-                    .fill(task.priority == 2 ? Color(hex: 0xFF6B6B) : Color.accentAmber)
+                    .fill(task.priority == 2 ? Color.accentDestructive : Color.textSecondary)
                     .frame(width: 6, height: 6)
                     .padding(.leading, 4)
             }
@@ -67,9 +96,12 @@ struct TaskRowView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(task.title)
                         .dfBody()
-                        .foregroundStyle(task.isCompleted ? Color.textSecondary : Color.textPrimary)
-                        .strikethrough(task.isCompleted)
-                        .opacity(task.isCompleted ? 0.5 : 1)
+                        .foregroundStyle(
+                            task.isCompleted
+                                ? Color.textSecondary.opacity(0.5)
+                                : Color.textPrimary
+                        )
+                        .strikethrough(task.isCompleted, color: Color.textSecondary)
                         .lineLimit(2)
                         .animation(.easeInOut(duration: 0.15), value: task.isCompleted)
 
@@ -97,8 +129,8 @@ struct TaskRowView: View {
             }
             if let onSetPriority {
                 Menu("Приоритет") {
-                    Button("🔴 Срочная") { onSetPriority(2) }
-                    Button("🟡 Важная") { onSetPriority(1) }
+                    Button("Срочная") { onSetPriority(2) }
+                    Button("Важная") { onSetPriority(1) }
                     Button("Обычная") { onSetPriority(0) }
                 }
             }
@@ -135,6 +167,7 @@ struct TaskRowView: View {
             onSetFocus: {},
             onDelete: {}
         )
+        Divider().background(Color.separator).padding(.leading, 52)
         let completed = DailyTask(title: "Завершённая задача", date: .now)
         TaskRowView(
             task: completed,

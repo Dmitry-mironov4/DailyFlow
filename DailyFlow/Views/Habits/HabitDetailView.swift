@@ -7,7 +7,9 @@ struct HabitDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
 
-    private var today: Date { Calendar.current.startOfDay(for: .now) }
+    private var today: Date {
+        Calendar.current.startOfDay(for: .now)
+    }
 
     private var isDoneToday: Bool {
         HabitService.isDone(habit, on: today)
@@ -21,7 +23,9 @@ struct HabitDetailView: View {
         maxStreak(for: habit)
     }
 
-    private var accentColor: Color { Color(hex: habit.colorHex) }
+    private var accentColor: Color {
+        Color(hex: habit.colorHex)
+    }
 
     var body: some View {
         ScrollView {
@@ -78,7 +82,7 @@ struct HabitDetailView: View {
                 Text("РЕКОРД").dfCaption()
                 Text("\(recordStreak) дней")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color.accentAmber)
+                    .foregroundStyle(Color.textPrimary)
             }
         }
         .dfCard()

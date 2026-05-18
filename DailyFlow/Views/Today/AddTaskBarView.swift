@@ -12,7 +12,7 @@ struct AddTaskBarView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
                 Image(systemName: focused ? "circle.fill" : "plus")
-                    .foregroundStyle(Color.accentTeal)
+                    .foregroundStyle(Color.accentWhite)
                     .frame(width: 16, height: 16)
                     .animation(.easeInOut(duration: 0.2), value: focused)
 
@@ -22,6 +22,7 @@ struct AddTaskBarView: View {
                     .onSubmit(submit)
                     .foregroundStyle(focused ? Color.textPrimary : Color.textGhost)
                     .font(.system(size: 13))
+                    .tint(Color.accentWhite)
 
                 if focused {
                     Button {
@@ -39,23 +40,31 @@ struct AddTaskBarView: View {
                         showTimePicker.toggle()
                     } label: {
                         Image(systemName: scheduledTime != nil ? "clock.fill" : "clock")
-                            .foregroundStyle(scheduledTime != nil ? Color.accentTeal : Color.textSecondary)
+                            .foregroundStyle(
+                                scheduledTime != nil ? Color.accentWhite : Color.textSecondary
+                            )
                             .font(.system(size: 14))
                     }
                     .buttonStyle(.plain)
                     .transition(.opacity.combined(with: .scale))
                 }
             }
+            .padding(.horizontal, 12)
             .padding(.vertical, 12)
+            .background(
+                focused ? Color.bgElevated : Color.clear,
+                in: .rect(cornerRadius: 8)
+            )
             .overlay(alignment: .bottom) {
                 if focused {
                     Rectangle()
-                        .fill(Color.accentTeal)
+                        .fill(Color.accentWhite)
                         .frame(height: 1)
+                        .padding(.horizontal, 12)
                 }
             }
 
-            if focused && showTimePicker {
+            if focused, showTimePicker {
                 timePickerRow
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
@@ -78,7 +87,7 @@ struct AddTaskBarView: View {
             )
             .datePickerStyle(.compact)
             .labelsHidden()
-            .accentColor(Color.accentTeal)
+            .tint(Color.accentWhite)
 
             if scheduledTime != nil {
                 Button {
@@ -91,14 +100,15 @@ struct AddTaskBarView: View {
                 .buttonStyle(.plain)
             }
         }
+        .padding(.horizontal, 12)
         .padding(.vertical, 8)
     }
 
     private var priorityColor: Color {
         switch priority {
-        case 1: return Color.accentAmber
-        case 2: return Color(hex: 0xFF6B6B)
-        default: return Color.textGhost
+        case 1: Color.textPrimary
+        case 2: Color.accentDestructive
+        default: Color.textGhost
         }
     }
 

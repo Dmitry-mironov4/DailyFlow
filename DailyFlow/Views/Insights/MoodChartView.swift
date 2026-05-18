@@ -23,35 +23,15 @@ struct MoodChartView: View {
                         .lineStyle(StrokeStyle(lineWidth: 0))
                 }
                 ForEach(pointsWithData) { point in
-                    AreaMark(
+                    let score = Double(point.score!)
+                    BarMark(
                         x: .value("День", point.date, unit: .day),
-                        y: .value("Настроение", point.score!)
+                        y: .value("Настроение", score)
                     )
                     .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.accentPurple.opacity(0.35), Color.accentPurple.opacity(0)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+                        Color.accentWhite.opacity(score / 5.0 * 0.6 + 0.4)
                     )
-                    .interpolationMethod(.catmullRom)
-                }
-                ForEach(pointsWithData) { point in
-                    LineMark(
-                        x: .value("День", point.date, unit: .day),
-                        y: .value("Настроение", point.score!)
-                    )
-                    .foregroundStyle(Color.accentPurple)
-                    .lineStyle(StrokeStyle(lineWidth: 2))
-                    .interpolationMethod(.catmullRom)
-                }
-                ForEach(pointsWithData) { point in
-                    PointMark(
-                        x: .value("День", point.date, unit: .day),
-                        y: .value("Настроение", point.score!)
-                    )
-                    .foregroundStyle(Color.accentPurple)
-                    .symbolSize(30)
+                    .cornerRadius(3)
                 }
             }
             .chartYScale(domain: 0 ... 5)

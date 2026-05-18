@@ -60,22 +60,35 @@ struct JournalView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var dateCaption: String {
+    private static let dayFormatter: DateFormatter = {
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "ru_RU")
         fmt.dateFormat = "EEEE, d MMMM"
-        return fmt.string(from: .now).uppercased()
+        return fmt
+    }()
+
+    private static let timeFormatterToday: DateFormatter = {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ru_RU")
+        fmt.dateFormat = "'Сегодня, 'HH:mm"
+        return fmt
+    }()
+
+    private static let timeFormatterOther: DateFormatter = {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ru_RU")
+        fmt.dateFormat = "d MMM, HH:mm"
+        return fmt
+    }()
+
+    private var dateCaption: String {
+        Self.dayFormatter.string(from: .now).uppercased()
     }
 
     private func timeCaption(for date: Date) -> String {
-        let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "ru_RU")
-        if Calendar.current.isDateInToday(date) {
-            fmt.dateFormat = "'Сегодня, 'HH:mm"
-        } else {
-            fmt.dateFormat = "d MMM, HH:mm"
-        }
-        return fmt.string(from: date)
+        Calendar.current.isDateInToday(date)
+            ? Self.timeFormatterToday.string(from: date)
+            : Self.timeFormatterOther.string(from: date)
     }
 
     private func dismissKeyboard() {

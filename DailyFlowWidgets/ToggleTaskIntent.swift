@@ -1,6 +1,9 @@
 import AppIntents
+import OSLog
 import SwiftData
 import WidgetKit
+
+private nonisolated(unsafe) let logger = Logger(subsystem: "com.dmitry.DailyFlow.Widgets", category: "ToggleTaskIntent")
 
 struct ToggleTaskIntent: AppIntent {
     nonisolated(unsafe) static var title: LocalizedStringResource = "Toggle Task"
@@ -25,10 +28,14 @@ struct ToggleTaskIntent: AppIntent {
             return .result()
         }
         let pred = #Predicate<DailyTask> { $0.id == targetID }
-        if let task = try ctx.fetch(FetchDescriptor(predicate: pred)).first {
-            task.isCompleted.toggle()
-            task.completedAt = task.isCompleted ? .now : nil
-            try ctx.save()
+        do {
+            if let task = try ctx.fetch(FetchDescriptor(predicate: pred)).first {
+                task.isCompleted.toggle()
+                task.completedAt = task.isCompleted ? .now : nil
+                try ctx.save()
+            }
+        } catch {
+            logger.error("perform: \(error.localizedDescription)")
         }
 
         WidgetCenter.shared.reloadAllTimelines()

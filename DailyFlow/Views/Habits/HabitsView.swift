@@ -32,13 +32,23 @@ struct HabitsView: View {
         .scrollContentBackground(.hidden)
         .environment(\.editMode, .constant(.active))
         .sheet(isPresented: $showAdd) {
-            AddHabitSheet(habit: nil) { name, hex in
-                HabitService.add(name: name, colorHex: hex, in: ctx)
+            AddHabitSheet(habit: nil) { name, hex, reminderTime in
+                if let habit = HabitService.add(name: name, colorHex: hex, in: ctx) {
+                    habit.reminderTime = reminderTime
+                    if let time = reminderTime {
+                        NotificationService.scheduleHabitReminder(for: habit, at: time)
+                    }
+                }
             }
         }
         .sheet(item: $editingHabit) { habit in
-            AddHabitSheet(habit: habit) { name, hex in
-                HabitService.update(habit, name: name, colorHex: hex, in: ctx)
+            AddHabitSheet(habit: habit) { name, hex, reminderTime in
+                HabitService.update(habit, name: name, colorHex: hex, reminderTime: reminderTime, in: ctx)
+                if let time = reminderTime {
+                    NotificationService.scheduleHabitReminder(for: habit, at: time)
+                } else {
+                    NotificationService.cancelReminder(for: habit)
+                }
             }
         }
         .sheet(item: $detailHabit) { habit in
@@ -58,11 +68,11 @@ struct HabitsView: View {
         Button { showAdd = true } label: {
             HStack(spacing: 10) {
                 Image(systemName: "plus")
-                    .foregroundStyle(Color.accentTeal)
+                    .foregroundStyle(Color.textSecondary)
                     .frame(width: 16, height: 16)
                 Text("Добавить привычку")
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(Color.accentTeal)
+                    .foregroundStyle(Color.textSecondary)
             }
             .padding(.vertical, 12)
         }
