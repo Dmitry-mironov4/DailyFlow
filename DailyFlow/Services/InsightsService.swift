@@ -129,6 +129,54 @@ enum InsightsService {
         return result
     }
 
+    // MARK: — Предыдущее окно (today−14 ... today−8)
+
+    private static func previousWindow(today: Date) -> (start: Date, end: Date) {
+        let cal = Calendar.current
+        let end = cal.startOfDay(for: cal.date(byAdding: .day, value: -8, to: today)!)
+        let start = cal.date(byAdding: .day, value: -6, to: end)!
+        return (start, end)
+    }
+
+    static func previousTasksRate(today: Date, in ctx: ModelContext) -> Double? {
+        let (start, end) = previousWindow(today: today)
+        let predicate = #Predicate<DailyTask> { $0.date >= start && $0.date <= end }
+        guard let tasks = try? ctx.fetch(FetchDescriptor<DailyTask>(predicate: predicate)),
+              !tasks.isEmpty else { return nil }
+        return Double(tasks.filter(\.isCompleted).count) / Double(tasks.count)
+    }
+
+    static func previousHabitsRate(today: Date, in ctx: ModelContext) -> Double? {
+        let (start, end) = previousWindow(today: today)
+        let cal = Calendar.current
+        guard let habits = try? ctx.fetch(FetchDescriptor<Habit>()),
+              !habits.isEmpty else { return nil }
+        var dates: [Date] = []
+        var cursor = start
+        while cursor <= end {
+            dates.append(cursor)
+            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
+        }
+        var dailyRates: [Double] = []
+        for day in dates {
+            let active = habits.filter { cal.startOfDay(for: $0.createdAt) <= day }
+            if active.isEmpty { continue }
+            let logs = active.reduce(0) { $0 + $1.logs.filter { $0.date == day }.count }
+            dailyRates.append(Double(logs) / Double(active.count))
+        }
+        guard !dailyRates.isEmpty else { return nil }
+        return dailyRates.reduce(0, +) / Double(dailyRates.count)
+    }
+
+    static func previousMoodRate(today: Date, in ctx: ModelContext) -> Double? {
+        let (start, end) = previousWindow(today: today)
+        let predicate = #Predicate<JournalEntry> { $0.date >= start && $0.date <= end }
+        guard let entries = try? ctx.fetch(FetchDescriptor<JournalEntry>(predicate: predicate)),
+              !entries.isEmpty else { return nil }
+        let avg = Double(entries.reduce(0) { $0 + $1.moodScore }) / Double(entries.count)
+        return (avg - 1.0) / 4.0
+    }
+
     // MARK: — uniqueDataDays
 
     /// Количество уникальных дней в окне с хотя бы одной записью

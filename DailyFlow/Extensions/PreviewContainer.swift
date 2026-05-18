@@ -25,7 +25,7 @@ extension ModelContainer {
     @MainActor
     // swiftlint:disable:next cyclomatic_complexity function_body_length
     static func preview(_ scenario: PreviewScenario) -> ModelContainer {
-        let schema = Schema([DailyTask.self, Habit.self, HabitLog.self, JournalEntry.self])
+        let schema = Schema([DailyTask.self, Habit.self, HabitLog.self, JournalEntry.self, TaskList.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         // swiftlint:disable:next force_try
         let container = try! ModelContainer(for: schema, configurations: [config])

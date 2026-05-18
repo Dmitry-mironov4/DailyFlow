@@ -7,6 +7,7 @@ struct HabitsView: View {
 
     @State private var showAdd = false
     @State private var editingHabit: Habit?
+    @State private var detailHabit: Habit?
 
     var body: some View {
         List {
@@ -16,7 +17,8 @@ struct HabitsView: View {
                     habit: habit,
                     onToggle: { HabitService.toggleToday(habit, in: ctx) },
                     onEdit: { editingHabit = habit },
-                    onDelete: { HabitService.delete(habit, in: ctx) }
+                    onDelete: { HabitService.delete(habit, in: ctx) },
+                    onShowDetail: { detailHabit = habit }
                 )
                 .listRowBackground(Color.bgPrimary)
                 .listRowSeparator(.hidden)
@@ -38,6 +40,9 @@ struct HabitsView: View {
             AddHabitSheet(habit: habit) { name, hex in
                 HabitService.update(habit, name: name, colorHex: hex, in: ctx)
             }
+        }
+        .sheet(item: $detailHabit) { habit in
+            HabitDetailView(habit: habit)
         }
     }
 

@@ -9,7 +9,10 @@ struct AddHabitSheet: View {
     @State private var selectedHex: String
     @FocusState private var isFocused: Bool
 
-    private let colorOptions = ["2DD4A0", "F0A23B", "9B8AE8"]
+    private let colorOptions = [
+        "2DD4A0", "F0A23B", "9B8AE8", "3ECFB2",
+        "FF6B6B", "5BA4F5", "8BBF4D", "E8789A"
+    ]
 
     init(habit: Habit?, onSave: @escaping (String, String) -> Void) {
         self.habit = habit
@@ -29,24 +32,29 @@ struct AddHabitSheet: View {
                     .padding(.vertical, 14)
                     .background(Color.bgCard, in: .rect(cornerRadius: 12))
 
-                HStack(spacing: 12) {
-                    ForEach(colorOptions, id: \.self) { hex in
-                        Button {
-                            selectedHex = hex
-                        } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(Color(hex: hex))
-                                    .frame(width: 32, height: 32)
-                                    .opacity(selectedHex == hex ? 1.0 : 0.4)
-                                if selectedHex == hex {
-                                    Circle()
-                                        .strokeBorder(Color(hex: hex), lineWidth: 2)
-                                        .frame(width: 40, height: 40)
+                VStack(spacing: 12) {
+                    ForEach([0, 1], id: \.self) { row in
+                        HStack(spacing: 12) {
+                            ForEach(0 ..< 4, id: \.self) { col in
+                                let hex = colorOptions[row * 4 + col]
+                                Button {
+                                    selectedHex = hex
+                                } label: {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color(hex: hex))
+                                            .frame(width: 32, height: 32)
+                                            .opacity(selectedHex == hex ? 1.0 : 0.5)
+                                        if selectedHex == hex {
+                                            Circle()
+                                                .strokeBorder(Color.white, lineWidth: 2)
+                                                .frame(width: 40, height: 40)
+                                        }
+                                    }
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
-                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 16)

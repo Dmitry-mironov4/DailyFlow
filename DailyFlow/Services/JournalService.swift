@@ -36,6 +36,15 @@ enum JournalService {
         try? ctx.save()
     }
 
+    /// Обновляет activities у сегодняшней записи.
+    static func setActivities(_ activities: [String], in ctx: ModelContext, now: Date = .now) {
+        let entry = getOrCreateToday(in: ctx, now: now)
+        guard entry.activities != activities else { return }
+        entry.activities = activities
+        entry.updatedAt = now
+        try? ctx.save()
+    }
+
     /// Записывает text.
     /// Если запись отсутствует и text пустой — no-op (не плодим пустые записи).
     /// Если запись отсутствует и text не пустой — создаёт через getOrCreateToday и пишет text.

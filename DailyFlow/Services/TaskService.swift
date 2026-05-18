@@ -7,13 +7,26 @@ enum TaskService {
         title: String,
         isFocus: Bool = false,
         on date: Date,
+        priority: Int = 0,
+        list: TaskList? = nil,
         in ctx: ModelContext
     ) -> DailyTask? {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        let task = DailyTask(title: trimmed, date: date, isFocus: isFocus)
+        let task = DailyTask(title: trimmed, date: date, isFocus: isFocus, priority: priority)
+        task.list = list
         ctx.insert(task)
         return task
+    }
+
+    static func updatePriority(_ task: DailyTask, to priority: Int, in ctx: ModelContext) {
+        task.priority = priority
+        try? ctx.save()
+    }
+
+    static func moveToList(_ task: DailyTask, list: TaskList?, in ctx: ModelContext) {
+        task.list = list
+        try? ctx.save()
     }
 
     static func toggleCompletion(_ task: DailyTask, in ctx: ModelContext) {

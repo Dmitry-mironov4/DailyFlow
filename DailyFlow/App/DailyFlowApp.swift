@@ -9,6 +9,7 @@ struct DailyFlowApp: App {
             Habit.self,
             HabitLog.self,
             JournalEntry.self,
+            TaskList.self,
         ])
         let config = ModelConfiguration(schema: schema)
         do {
@@ -21,7 +22,21 @@ struct DailyFlowApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear { seedDefaultLists() }
         }
         .modelContainer(container)
+    }
+
+    private func seedDefaultLists() {
+        let ctx = container.mainContext
+        guard (try? ctx.fetch(FetchDescriptor<TaskList>()))?.isEmpty == true else { return }
+        let defaults: [(String, String, Int)] = [
+            ("Входящие", "📥", 0), ("Учёба", "🎓", 1),
+            ("Личное", "👤", 2), ("Работа", "💼", 3)
+        ]
+        for (name, emoji, order) in defaults {
+            ctx.insert(TaskList(name: name, emoji: emoji, sortOrder: order))
+        }
+        try? ctx.save()
     }
 }
