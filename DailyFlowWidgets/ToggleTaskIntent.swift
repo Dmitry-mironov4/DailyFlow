@@ -3,7 +3,7 @@ import SwiftData
 import WidgetKit
 
 struct ToggleTaskIntent: AppIntent {
-    static var title: LocalizedStringResource = "Toggle Task"
+    nonisolated(unsafe) static var title: LocalizedStringResource = "Toggle Task"
 
     @Parameter(title: "Task ID")
     var taskID: String
